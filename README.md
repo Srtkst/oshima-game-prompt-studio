@@ -22,7 +22,7 @@ npm run dev
 
 - `data/presets.json` が共通プリセットの正本です。変更後に `npm run build` で配布用モジュールを更新します。
 - `npm test` は配布データと正本の一致、および生成・入力検証のテストを実行します。
-- `public/` が静的配信ディレクトリです。将来GitHub Pagesを構成する場合は、このディレクトリを配布対象にします。
+- `public/` が静的配信ディレクトリです。GitHub Pagesの公開元に GitHub Actions を選ぶと、`main` の更新時にテストを実行してから `public/` を公開します。
 - `examples/sorting/prompt.md` はアプリから実際にダウンロードした指示書です。`examples/sorting/index.html` をブラウザで直接開くと、仕分けゲームをオフラインで試せます。
 
 ## 地域題材の確認
