@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="団地の暮らし・交流・防災を題材に、Webゲームの制作指示書を作るスタジオ。">
+  <title>OSHIMA GAME PROMPT STUDIO</title>
+  <link rel="icon" href="./assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <a class="skip" href="#main">本文へ移動</a>
+  <header class="site-header">
+    <div class="container header-row">
+      <button class="brand" id="home" type="button" aria-label="スタジオのホーム">
+        <img src="./assets/logo.svg" width="36" height="36" alt="">
+        <span>OSHIMA<span class="brand-sub">GAME PROMPT STUDIO</span></span>
+      </button>
+      <a class="header-link" href="#about">このスタジオについて <span aria-hidden="true">↘</span></a>
+    </div>
+  </header>
+  <main id="main" class="container" tabindex="-1">
+    <div id="workspace"></div>
+    <noscript>このスタジオを利用するにはJavaScriptを有効にしてください。</noscript>
+    <section id="about" class="about" aria-labelledby="about-title">
+      <p class="eyebrow">ABOUT THE STUDIO</p>
+      <h2 id="about-title">題材を扱うときに</h2>
+      <div class="about-grid">
+        <p><strong>架空と事実を分ける</strong>サンプルはすべて創作です。地域の決まりや防災情報を使う場合は、適用範囲と出典を担当者が照合してください。</p>
+        <p><strong>誰もが遊べる題材に</strong>国籍や世代に役割を決めつけず、個人を特定できる情報や利用許諾のない素材は使わないでください。</p>
+        <p><strong>制作指示書を手元に</strong>入力はブラウザ内で処理します。完成したMarkdownを保存し、確認してから制作に利用してください。</p>
+      </div>
+    </section>
+  </main>
+  <footer class="container site-footer"><span>OSHIMA GAME PROMPT STUDIO</span><span>企画制作ツール · v0.1</span></footer>
+  <div id="announcement" class="sr-only" role="status"></div>
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>

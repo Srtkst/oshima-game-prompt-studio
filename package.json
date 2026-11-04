@@ -1,0 +1,12 @@
+{
+  "name": "oshima-game-prompt-studio",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "dev": "node tools/serve.js",
+    "build": "node tools/build-data.js",
+    "test": "node tools/build-data.js --check && node --test"
+  }
+}

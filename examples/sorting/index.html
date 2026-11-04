@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="ja">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>分けて、つなごう</title>
+<style>
+  :root { font: 17px/1.55 system-ui, sans-serif; color: #18251f; background: #f8f7ee; }
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  main { width: min(600px, calc(100% - 24px)); margin: 26px auto; }
+  header { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-bottom: 12px; }
+  section { background: #fffef6; border: 2px solid #c9d5b7; border-radius: 18px; padding: clamp(16px, 5vw, 34px); }
+  h1, h2, p { margin: 0 0 14px; }
+  button, select { font: inherit; color: inherit; background: #ddeb98; border: 1px solid #77844f; border-radius: 9px; min-height: 44px; padding: 8px 12px; cursor: pointer; }
+  :focus-visible { outline: 3px solid #3c6b58; outline-offset: 3px; }
+  .scene { font-size: 46px; letter-spacing: .25em; color: #54795a; }
+  .stats { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px; font-size: .88rem; }
+  .item { display: grid; justify-items: center; border-radius: 13px; margin: 12px 0; background: #eff1dd; padding: 10px; }
+  .shape { font-size: 2.4rem; line-height: 1.2; }
+  .bins { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .bins button { display: grid; justify-items: center; min-width: 0; padding-inline: 4px; font-size: .82rem; }
+  .bins button[data-hint] { outline: 3px dashed #33634c; outline-offset: -4px; }
+  #feedback { margin: 12px 0 0; min-height: 1.6em; }
+</style>
+<main>
+  <header>
+    <label for="language" data-text="language">言語</label>
+    <select id="language"><option value="ja">日本語</option><option value="en">English</option></select>
+    <button type="button" id="sound" aria-pressed="false" data-text="mute">ミュート</button>
+  </header>
+  <section id="title-screen">
+    <div class="scene" aria-hidden="true">●■★</div>
+    <h1 tabindex="-1" data-text="title">分けて、つなごう</h1>
+    <p data-text="story">集会室で開く交換会の準備を手伝おう。形を見て、遊び道具を箱へ戻します。</p>
+    <button type="button" id="instructions" data-text="instructions">遊び方</button>
+  </section>
+  <section id="instructions-screen" hidden>
+    <h2 tabindex="-1" data-text="instructions">遊び方</h2>
+    <p data-text="how">道具と同じ形の箱を選びます。全12問、75秒。正解で10点。矢印キーで移動し、EnterまたはSpaceで選べます。</p>
+    <button type="button" id="start" data-text="start">スタート</button>
+  </section>
+  <section id="play-screen" hidden>
+    <h2 tabindex="-1" data-text="choose">同じ形の箱を選ぼう</h2>
+    <div class="stats"><span id="progress"></span><span id="score"></span><span id="clock"></span></div>
+    <div class="item"><span class="shape" id="shape" aria-hidden="true"></span><strong id="item-name"></strong></div>
+    <div class="bins" id="bins"></div>
+    <p id="feedback" role="status"></p>
+  </section>
+  <section id="result-screen" hidden>
+    <h2 tabindex="-1" id="result-heading"></h2>
+    <p id="result-score"></p>
+    <button type="button" id="retry" data-text="retry">もう一度</button>
+    <button type="button" id="back" data-text="back">タイトルへ</button>
+  </section>
+</main>
+<script>
+  const strings = {
+    ja: { title: '分けて、つなごう', story: '集会室で開く交換会の準備を手伝おう。形を見て、遊び道具を箱へ戻します。', language: '言語',
+      instructions: '遊び方', how: '道具と同じ形の箱を選びます。全12問、75秒。正解で10点。矢印キーで移動し、EnterまたはSpaceで選べます。',
+      start: 'スタート', choose: '同じ形の箱を選ぼう', score: 'スコア', time: '残り', count: '問題', success: 'クリア！', expired: '時間切れ',
+      retry: 'もう一度', back: 'タイトルへ', mute: 'ミュート', right: 'ぴったり！', wrong: 'マークの形を見て、もう一度。', box: 'の箱' },
+    en: { title: 'Sort Together', story: 'Help prepare for the toy swap in the community room. Put each toy in the box with its matching shape.', language: 'Language',
+      instructions: 'How to play', how: 'Choose the matching box. There are 12 toys and 75 seconds. Each match is worth 10 points. Use arrow keys to move and Enter or Space to choose.',
+      start: 'Start', choose: 'Choose the matching box', score: 'Score', time: 'Time', count: 'Toy', success: 'Complete!', expired: 'Time is up',
+      retry: 'Play again', back: 'Back to title', mute: 'Mute', right: 'A perfect match!', wrong: 'Look at the shape and try again.', box: ' box' },
+  };
+  const toys = [
+    { symbol: '●', item: { ja: '丸いコマ', en: 'Round top' }, label: { ja: '丸', en: 'Circle' } },
+    { symbol: '■', item: { ja: '四角い積み木', en: 'Square block' }, label: { ja: '四角', en: 'Square' } },
+    { symbol: '★', item: { ja: '星形の飾り', en: 'Star decoration' }, label: { ja: '星', en: 'Star' } },
+  ];
+  const order = [0, 1, 2, 1, 0, 2, 0, 2, 1, 2, 1, 0];
+  const get = (id) => document.getElementById(id);
+  const screens = [...document.querySelectorAll('main > section')];
+  let current = 'title';
+  let language = 'ja';
+  let index = 0;
+  let deadline = 0;
+  let timer;
+  let hintTimer;
+  let hint = '';
+  let muted = false;
+  let audio;
+
+  const words = () => strings[language];
+  const bins = toys.map((toy, i) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    const shape = document.createElement('span');
+    shape.className = 'shape';
+    shape.setAttribute('aria-hidden', 'true');
+    shape.textContent = toy.symbol;
+    const label = document.createElement('span');
+    button.append(shape, label);
+    button.addEventListener('click', () => choose(i));
+    get('bins').append(button);
+    return button;
+  });
+
+  function screen(name) {
+    current = name;
+    screens.forEach((element) => { element.hidden = element.id !== `${name}-screen`; });
+    get(`${name}-screen`).querySelector('[tabindex="-1"]').focus();
+  }
+
+  function showRound() {
+    const toy = toys[order[index]];
+    get('shape').textContent = toy.symbol;
+    get('item-name').textContent = toy.item[language];
+    get('progress').textContent = `${words().count} ${index + 1} / ${order.length}`;
+    get('score').textContent = `${words().score} ${index * 10}`;
+    get('feedback').textContent = hint ? words()[hint] : '';
+  }
+
+  function tick() {
+    const seconds = Math.max(0, Math.ceil((deadline - performance.now()) / 1000));
+    get('clock').textContent = `${words().time} ${seconds} s`;
+    if (seconds === 0) finish();
+  }
+
+  function showResult() {
+    get('result-heading').textContent = index === order.length ? words().success : words().expired;
+    get('result-score').textContent = `${words().score} ${index * 10} / ${order.length * 10}`;
+  }
+
+  function clearHint() {
+    clearTimeout(hintTimer);
+    bins.forEach((bin) => bin.removeAttribute('data-hint'));
+  }
+
+  function finish() {
+    clearInterval(timer);
+    clearHint();
+    showResult();
+    screen('result');
+  }
+
+  function play() {
+    clearInterval(timer);
+    clearHint();
+    index = 0;
+    hint = '';
+    deadline = performance.now() + 75000;
+    showRound();
+    tick();
+    timer = setInterval(tick, 100);
+    screen('play');
+  }
+
+  function tone(frequency) {
+    if (muted || !window.AudioContext) return;
+    try {
+      audio ??= new AudioContext();
+      audio.resume().catch(() => {});
+      const note = audio.createOscillator();
+      const gain = audio.createGain();
+      note.frequency.value = frequency;
+      gain.gain.setValueAtTime(.04, audio.currentTime);
+      gain.gain.exponentialRampToValueAtTime(.001, audio.currentTime + .12);
+      note.connect(gain).connect(audio.destination);
+      note.start();
+      note.stop(audio.currentTime + .13);
+    } catch { /* Visual feedback is available when audio is blocked. */ }
+  }
+
+  function choose(choice) {
+    if (current !== 'play') return;
+    if (performance.now() >= deadline) return finish();
+    clearHint();
+    if (choice === order[index]) {
+      tone(610);
+      index += 1;
+      hint = 'right';
+      if (index === order.length) return finish();
+    } else {
+      tone(360);
+      hint = 'wrong';
+      bins[order[index]].setAttribute('data-hint', '');
+      hintTimer = setTimeout(clearHint, 850);
+    }
+    showRound();
+  }
+
+  get('language').addEventListener('change', (event) => {
+    language = event.target.value;
+    translate();
+  });
+  function translate() {
+    document.documentElement.lang = language;
+    document.title = words().title;
+    document.querySelectorAll('[data-text]').forEach((element) => { element.textContent = words()[element.dataset.text]; });
+    bins.forEach((bin, i) => { bin.lastElementChild.textContent = toys[i].label[language] + words().box; });
+    if (current === 'play') { showRound(); tick(); }
+    if (current === 'result') showResult();
+  }
+  get('bins').addEventListener('keydown', (event) => {
+    const offset = { ArrowLeft: -1, ArrowUp: -1, ArrowRight: 1, ArrowDown: 1 }[event.key];
+    if (!offset) return;
+    event.preventDefault();
+    const selected = bins.indexOf(document.activeElement);
+    bins[(selected + offset + bins.length) % bins.length].focus();
+  });
+  get('play-screen').querySelector('h2').addEventListener('keydown', (event) => {
+    if (!event.key.startsWith('Arrow')) return;
+    event.preventDefault();
+    bins[0].focus();
+  });
+  get('sound').addEventListener('click', (event) => {
+    muted = !muted;
+    event.currentTarget.setAttribute('aria-pressed', String(muted));
+  });
+  get('instructions').addEventListener('click', () => screen('instructions'));
+  get('start').addEventListener('click', play);
+  get('retry').addEventListener('click', play);
+  get('back').addEventListener('click', () => screen('title'));
+  translate();
+</script>
+</html>
