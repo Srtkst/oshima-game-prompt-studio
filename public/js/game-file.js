@@ -1,5 +1,31 @@
 export const gameBytesLimit = 512 * 1024;
 export const gameIdPattern = /^[a-f0-9]{32}$/u;
+export const gameSlugLimit = 48;
+
+export function suggestGameSlug(filename) {
+  return filename.replace(/\.html?$/iu, '').normalize('NFKC').toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/gu, '')
+    .slice(0, gameSlugLimit).replace(/-+$/u, '');
+}
+
+export function isGameSlug(value) {
+  return typeof value === 'string' && value.length <= gameSlugLimit
+    && /^[\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)*$/u.test(value)
+    && value === value.normalize('NFKC').toLowerCase()
+    && !/^(?:index|con|prn|aux|nul|com[1-9]|lpt[1-9])$/u.test(value);
+}
+
+export function registeredGameUrl(slug, base) {
+  const url = new URL('./play.html', base);
+  url.searchParams.set('game', slug);
+  return url.href;
+}
+
+export function registeredTitle(slug, game) {
+  if (!/^[a-f0-9]{24}$/u.test(slug)) return game.title;
+  const title = game.html.match(/<title(?:\s[^>]*)?>([^<]{1,80})<\/title\s*>/iu)?.[1].trim();
+  return title || game.title;
+}
 
 export function validateGame(html) {
   if (typeof html !== 'string') throw new Error('UTF-8のHTML文書（.html）を指定してください。');

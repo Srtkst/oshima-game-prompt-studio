@@ -2,7 +2,14 @@
 
 ## 動作の違い
 
-GitHub Pages版では「HTMLで遊ぶ」から同じ端末で試遊し、公開済みURLのQRを作成できる。「公開済みの仕分けゲームを試す」で、QRを読み取った先の画面を試せる。運営者は確認済みのHTMLを読み込んで事前登録用JSONを保存し、`public/games/` に置いてGitHub Pagesに反映させる。表示された作品URLで起動を確認してから配布する。
+GitHub Pages版では「HTMLで遊ぶ」から同じ端末で試遊し、公開済みURLのQRを作成できる。「ゲーム作品一覧」では登録済みの作品をカードから選べる。プレイ画面の「大画面」で表示領域を広げられる。
+
+### GitHub Pagesへ事前登録
+
+1. 確認済みのHTMLを「HTMLで遊ぶ」で開き、「運営者がGitHub Pagesに事前登録する」を開く。
+2. 作品名と作品IDを確認して登録用JSONを保存する。たとえば `Tool Tidying.html` からは `tool-tidying.json` が提案される。作品IDは日本語・小文字の英数字・ハイフンで変更できる。
+3. JSONを `public/games/` に追加してpushする。GitHub Actionsが作品一覧を自動生成する。公開後は `play.html?game=tool-tidying` のようにJSONの拡張子を除いた名前で開ける。
+4. 既存のJSONをリネームすると、作品一覧には新しい名前が反映される。以前配ったURLとQRは、新しいファイル名に合わせて作り直す。
 
 会場で新しいHTMLを受け付け、GitHubの再配信を待たずに参加者へQRを渡す場合は、同じアプリをNode.jsのイベント配信モードで起動する。
 

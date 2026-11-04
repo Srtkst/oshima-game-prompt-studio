@@ -21,6 +21,7 @@ jobs:
         with:
           node-version: '22'
       - run: npm test
+      - run: npm run build:games
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:
@@ -51,3 +52,5 @@ jobs:
           curl -fsSL --max-time 15 --retry 5 --retry-all-errors --retry-delay 5 "$base/js/play.js" -o /dev/null
           curl -fsSL --max-time 15 --retry 5 --retry-all-errors --retry-delay 5 "$base/vendor/qrcode-generator.js" -o /dev/null
           curl -fsSL --max-time 15 --retry 5 --retry-all-errors --retry-delay 5 "$base/games/sorting-demo.json" -o /dev/null
+          curl -fsSL --max-time 15 --retry 5 --retry-all-errors --retry-delay 5 "$base/gallery.html" -o /dev/null
+          curl -fsSL --max-time 15 --retry 5 --retry-all-errors --retry-delay 5 "$base/games/index.json" -o /dev/null

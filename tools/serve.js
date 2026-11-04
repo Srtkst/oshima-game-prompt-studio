@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { resolve, sep, extname } from 'node:path';
 import { gameApi } from './game-api.js';
+import { gameCatalog } from './build-game-catalog.js';
 
 const root = resolve(fileURLToPath(new URL('../public', import.meta.url)));
 const port = Number(process.argv[2] ?? process.env.PORT ?? 4173);
@@ -18,6 +19,17 @@ const api = gameApi({ key: process.env.EVENT_PUBLISH_KEY, publicUrl: process.env
 createServer({ requestTimeout: 30_000 }, async (request, response) => {
   try {
     const pathname = decodeURIComponent(new URL(request.url, 'http://127.0.0.1').pathname);
+    if (pathname === '/games/index.json') {
+      try {
+        const games = await gameCatalog();
+        response.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+        response.end(JSON.stringify(games));
+      } catch (error) {
+        console.error(error.message);
+        response.writeHead(500).end();
+      }
+      return;
+    }
     if (pathname.startsWith('/api/')) {
       try { await api(request, response, pathname); }
       catch (error) {

@@ -6,7 +6,8 @@
   "engines": { "node": ">=22" },
   "scripts": {
     "dev": "node tools/serve.js",
-    "build": "node tools/build-data.js",
+    "build": "node tools/build-data.js && npm run build:games",
+    "build:games": "node tools/build-game-catalog.js",
     "test": "node tools/build-data.js --check && node --test"
   }
 }

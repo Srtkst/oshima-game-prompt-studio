@@ -16,7 +16,7 @@
         <img src="./assets/logo.svg" width="36" height="36" alt="">
         <span>OSHIMA<span class="brand-sub">GAME PROMPT STUDIO</span></span>
       </a>
-      <a class="header-link" href="./">指示書をつくる ↗</a>
+      <a class="header-link" href="./gallery.html">ゲーム作品一覧 ↗</a>
     </div>
   </header>
   <main class="container">
@@ -30,8 +30,14 @@
         <input id="game-file" type="file" accept=".html,.htm,text/html" aria-describedby="game-format">
         <a href="?game=sorting-demo">公開済みの仕分けゲームを試す ↗</a>
       </div>
-      <div id="game-view" hidden>
-        <div class="preview-bar"><span id="game-label">試遊画面</span><button type="button" id="game-restart" class="text-button">はじめから</button></div>
+      <div id="game-view" class="game-view" role="region" aria-label="ゲームプレイヤー" hidden>
+        <div class="preview-bar game-toolbar">
+          <span id="game-label">試遊画面</span>
+          <div class="game-toolbar-actions">
+            <button type="button" id="game-restart" class="text-button">はじめから</button>
+            <button type="button" id="game-fullscreen" class="text-button" aria-pressed="false">⛶ 大画面</button>
+          </div>
+        </div>
         <iframe id="game-frame" class="game-frame" title="ゲーム画面" sandbox="allow-scripts" referrerpolicy="no-referrer" allow="camera 'none'; microphone 'none'; geolocation 'none'"></iframe>
       </div>
       <details id="game-staff" class="share-panel" hidden>
@@ -49,8 +55,18 @@
         <summary>運営者がGitHub Pagesに事前登録する</summary>
         <p class="hint">確認済みの作品を登録用JSONで保存します。ファイルをリポジトリの <code>public/games/</code> に配置し、公開が反映されたら、表示した作品URLでQRを作れます。</p>
         <p class="hint">会場で読み込んだ作品をすぐにQRで配る場合は、運営PCでイベント配信モードを使います。</p>
-        <button id="game-export" class="button secondary" type="button">事前登録用JSONを保存</button>
-        <p id="game-static-status" class="hint" role="status"></p>
+        <form id="game-export-form" class="wizard-form">
+          <div class="field"><label class="field-label" for="registered-title">一覧に表示する作品名</label><input id="registered-title" type="text" maxlength="80" required></div>
+          <div class="field">
+            <label class="field-label" for="registered-id">作品ID・JSONファイル名</label>
+            <input id="registered-id" type="text" maxlength="48" placeholder="例　tool-tidying" autocomplete="off" aria-describedby="registered-id-hint" required>
+            <p id="registered-id-hint" class="hint">HTMLファイル名から候補を作ります。日本語、小文字の英数字、ハイフンを使用できます。</p>
+            <p id="registered-preview" class="hint registration-url"></p>
+          </div>
+          <div class="field"><label class="field-label" for="registered-description">紹介文（任意）</label><input id="registered-description" type="text" maxlength="140"></div>
+          <button id="game-export" class="button secondary" type="submit">事前登録用JSONを保存</button>
+          <p id="game-static-status" class="hint" role="status"></p>
+        </form>
       </details>
       <details id="game-existing" class="share-panel">
         <summary>公開済みゲームのURLからQRをつくる</summary>

@@ -1,5 +1,5 @@
 import qrCode from '../vendor/qrcode-generator.js';
-import { gameBytesLimit, gameDocument, gameIdPattern } from './game-file.js';
+import { gameBytesLimit, gameDocument, gameIdPattern, isGameSlug, registeredGameUrl, registeredTitle, suggestGameSlug } from './game-file.js';
 
 const get = (id) => document.getElementById(id);
 const drop = get('game-import');
@@ -8,6 +8,8 @@ const registration = get('game-static');
 const status = get('game-status');
 const publishStatus = get('publish-status');
 const frame = get('game-frame');
+const view = get('game-view');
+const fullscreen = get('game-fullscreen');
 const remove = get('game-remove');
 let source;
 let eventConfig;
@@ -19,14 +21,14 @@ function openGame(title, html) {
   source = { title, html, document };
   frame.srcdoc = document;
   get('game-label').textContent = title;
-  get('game-view').hidden = false;
+  view.hidden = false;
 }
 
 async function loadFile(file) {
   const version = ++importVersion;
   source = undefined;
   frame.removeAttribute('srcdoc');
-  get('game-view').hidden = true;
+  view.hidden = true;
   staff.hidden = true;
   registration.hidden = true;
   get('game-approval').checked = false;
@@ -35,7 +37,13 @@ async function loadFile(file) {
     const html = new TextDecoder('utf-8', { fatal: true }).decode(await file.arrayBuffer());
     if (version !== importVersion) return;
     openGame(file.name, html);
-    get('game-name').value = file.name.replace(/\.html?$/iu, '').slice(0, 80);
+    const title = file.name.replace(/\.html?$/iu, '').slice(0, 80);
+    get('game-name').value = title;
+    get('registered-title').value = title;
+    get('registered-description').value = '';
+    const suggestedId = suggestGameSlug(file.name);
+    get('registered-id').value = isGameSlug(suggestedId) && suggestedId !== 'sorting-demo' ? suggestedId : '';
+    updateRegistrationPreview();
     status.textContent = '読み込みました。下の画面で試遊できます。';
     publishStatus.textContent = '';
     staff.hidden = !eventConfig?.publishing;
@@ -90,11 +98,70 @@ drop.addEventListener('drop', (event) => {
 });
 get('game-restart').addEventListener('click', () => { if (source) frame.srcdoc = source.document; });
 
-get('game-export').addEventListener('click', () => {
-  if (!source) return;
-  const id = Array.from(crypto.getRandomValues(new Uint8Array(12)), (byte) => byte.toString(16).padStart(2, '0')).join('');
-  const title = source.title.replace(/\.html?$/iu, '').slice(0, 80) || '作品';
-  const file = URL.createObjectURL(new Blob([JSON.stringify({ title, html: source.html })], { type: 'application/json' }));
+function isExpanded() {
+  return document.fullscreenElement === view || view.classList.contains('is-expanded');
+}
+
+function updateFullscreenLabel() {
+  fullscreen.textContent = isExpanded() ? '⛶ 大画面を閉じる' : '⛶ 大画面';
+  fullscreen.setAttribute('aria-pressed', String(isExpanded()));
+}
+
+function setExpanded(expanded) {
+  view.classList.toggle('is-expanded', expanded);
+  document.body.classList.toggle('game-expanded', expanded);
+  for (const element of document.querySelectorAll('.site-header, .game-panel > :not(#game-view)')) element.inert = expanded;
+  updateFullscreenLabel();
+}
+
+fullscreen.addEventListener('click', async () => {
+  if (document.fullscreenElement === view) {
+    await document.exitFullscreen();
+    return;
+  }
+  if (!isExpanded() && document.fullscreenEnabled && view.requestFullscreen) {
+    try { await view.requestFullscreen(); return; }
+    catch { /* The in-page layout is available when the browser declines fullscreen. */ }
+  }
+  setExpanded(!isExpanded());
+});
+document.addEventListener('fullscreenchange', updateFullscreenLabel);
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && view.classList.contains('is-expanded')) setExpanded(false);
+});
+
+function updateRegistrationPreview() {
+  const id = get('registered-id').value.trim();
+  get('registered-preview').textContent = isGameSlug(id) && id !== 'sorting-demo' ? `${id}.json → play.html?game=${id}` : '';
+}
+
+get('registered-id').addEventListener('input', updateRegistrationPreview);
+get('game-export-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const selected = source;
+  if (!selected) return;
+  const status = get('game-static-status');
+  const submit = get('game-export');
+  const id = get('registered-id').value.trim();
+  const title = get('registered-title').value.trim();
+  const description = get('registered-description').value.trim();
+  if (!title || !isGameSlug(id) || id === 'sorting-demo') {
+    status.textContent = '作品名と、48文字以内の作品IDを入力してください。既定のファイル名や端末の予約名は使えません。';
+    return;
+  }
+  submit.disabled = true;
+  let checked = false;
+  try {
+    const response = await fetch(`./games/${encodeURIComponent(id)}.json`, { method: 'HEAD', cache: 'no-store' });
+    if (response.ok) {
+      status.textContent = `「${id}」は登録済みです。別の作品IDを入力してください。`;
+      return;
+    }
+    checked = response.status === 404;
+  } catch { /* The HTML can still be packaged when the registry is offline. */ }
+  finally { submit.disabled = false; }
+  if (source !== selected) return;
+  const file = URL.createObjectURL(new Blob([JSON.stringify({ title, description, html: selected.html })], { type: 'application/json' }));
   const link = document.createElement('a');
   link.href = file;
   link.download = `${id}.json`;
@@ -102,9 +169,7 @@ get('game-export').addEventListener('click', () => {
   link.click();
   link.remove();
   setTimeout(() => URL.revokeObjectURL(file), 1000);
-  const url = new URL('./play.html', location.href);
-  url.searchParams.set('game', id);
-  get('game-static-status').textContent = `公開後の作品URL ${url.href}。GitHub Pagesと異なる場所で操作している場合は、公開先のURLに読み替えてください。`;
+  status.textContent = `${id}.json を保存します。公開後の作品URLは play.html?game=${id} です。${checked ? '' : '登録済みIDとの重複は、配置前に確認してください。'}`;
 });
 
 get('game-qr-form').addEventListener('submit', (event) => {
@@ -160,15 +225,16 @@ if (id !== null || staticGame !== null) {
   get('game-existing').hidden = true;
   status.textContent = 'ゲームを読み込んでいます…';
   try {
-    if (id !== null ? staticGame !== null || !gameIdPattern.test(id) : !/^(?:sorting-demo|[a-f0-9]{24})$/u.test(staticGame)) {
+    if (id !== null ? staticGame !== null || !gameIdPattern.test(id) : !isGameSlug(staticGame)) {
       throw new Error('作品URLを確認してください。');
     }
-    const { title, html } = await request(id !== null ? `./api/games/${id}` : `./games/${staticGame}.json`);
-    if (typeof title !== 'string' || !title.trim() || title.length > 80) throw new Error('作品データを確認してください。');
-    openGame(title, html);
+    const game = await request(id !== null ? `./api/games/${id}` : `./games/${encodeURIComponent(staticGame)}.json`);
+    if (typeof game?.title !== 'string' || !game.title.trim() || game.title.length > 80 || typeof game.html !== 'string') throw new Error('作品データを確認してください。');
+    const title = staticGame === null ? game.title : registeredTitle(staticGame, game);
+    openGame(title, game.html);
     get('game-title').textContent = title;
     status.textContent = 'ゲーム画面をタップして遊べます。';
-    if (staticGame !== null && !['localhost', '127.0.0.1', '[::1]'].includes(location.hostname)) showQr(location.href);
+    if (staticGame !== null && !['localhost', '127.0.0.1', '[::1]'].includes(location.hostname)) showQr(registeredGameUrl(staticGame, location.href));
   } catch (error) { status.textContent = error.message; }
 } else {
   request('./api/event.json').then((config) => {

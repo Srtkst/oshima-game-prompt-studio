@@ -130,7 +130,9 @@ function renderHome(focus = true) {
   actions.append(button('新規プロジェクト →', `button ${project ? 'secondary' : 'primary'}`, () => start()));
   const play = node('a', 'button secondary', 'HTMLで遊ぶ ↗');
   play.href = './play.html';
-  actions.append(play);
+  const gallery = node('a', 'button secondary', 'ゲーム作品一覧 ↗');
+  gallery.href = './gallery.html';
+  actions.append(play, gallery);
   const importInput = node('input');
   importInput.type = 'file';
   importInput.accept = '.json,application/json';
