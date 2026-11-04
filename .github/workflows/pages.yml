@@ -38,3 +38,12 @@ jobs:
     steps:
       - uses: actions/deploy-pages@v4
         id: deploy
+      - name: Verify public site
+        env:
+          PAGES_URL: ${{ steps.deploy.outputs.page_url }}
+        run: |
+          base="${PAGES_URL%/}"
+          curl -fsSL --max-time 15 --retry 5 --retry-all-errors --retry-delay 5 "$base/" -o "$RUNNER_TEMP/oshima-index.html"
+          grep -Fq '<title>OSHIMA GAME PROMPT STUDIO</title>' "$RUNNER_TEMP/oshima-index.html"
+          curl -fsSL --max-time 15 --retry 5 --retry-all-errors --retry-delay 5 "$base/styles.css" -o /dev/null
+          curl -fsSL --max-time 15 --retry 5 --retry-all-errors --retry-delay 5 "$base/js/app.js" -o /dev/null
