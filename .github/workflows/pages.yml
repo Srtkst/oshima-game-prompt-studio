@@ -47,3 +47,7 @@ jobs:
           grep -Fq '<title>OSHIMA GAME PROMPT STUDIO</title>' "$RUNNER_TEMP/oshima-index.html"
           curl -fsSL --max-time 15 --retry 5 --retry-all-errors --retry-delay 5 "$base/styles.css" -o /dev/null
           curl -fsSL --max-time 15 --retry 5 --retry-all-errors --retry-delay 5 "$base/js/app.js" -o /dev/null
+          curl -fsSL --max-time 15 --retry 5 --retry-all-errors --retry-delay 5 "$base/play.html" -o /dev/null
+          curl -fsSL --max-time 15 --retry 5 --retry-all-errors --retry-delay 5 "$base/js/play.js" -o /dev/null
+          curl -fsSL --max-time 15 --retry 5 --retry-all-errors --retry-delay 5 "$base/vendor/qrcode-generator.js" -o /dev/null
+          curl -fsSL --max-time 15 --retry 5 --retry-all-errors --retry-delay 5 "$base/games/sorting-demo.json" -o /dev/null

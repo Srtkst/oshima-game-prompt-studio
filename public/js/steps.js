@@ -36,6 +36,7 @@ export const steps = [
     return [
       select('genreId', 'ゲームジャンル', genreChoices, { refresh: true, help: genres.find(({ id }) => id === p.genreId)?.actions }),
       ...(p.genreId === 'custom' ? [field('genreCustom', 'ジャンルと主な操作', 'text', { max: limits.genre, required: true })] : []),
+      ...(p.genreId === 'rhythm' ? [select('rhythmTiming', 'リズム入力の判定', choices.rhythmTiming, { help: '音と視覚の合図を同期し、入力遅延を実機で確かめます。' })] : []),
       field('playSeconds', 'プレイ時間（秒）', 'number', { min: 10, max: 3600, placeholder: `推奨 ${suggestion.seconds} 秒`, help: `推奨 ${suggestion.seconds} 秒 · ${suggestion.secondsReason}。空欄で推奨値を使います。` }),
       select('difficulty', '難易度', { '': `推奨 · ${choices.difficulty[suggestion.difficulty]}`, ...choices.difficulty }, { help: suggestion.difficultyReason }),
       field('accessibility', '操作の配慮', 'checks', { items: choices.accessibility }),
@@ -50,9 +51,14 @@ export const steps = [
     select('visual', 'ビジュアル', choices.visual, { refresh: true }),
     ...(p.visual === 'custom' ? [field('styleNotes', '希望する画風', 'text', { required: true, max: limits.style })] : []),
     select('audio', 'サウンド', choices.audio),
+    select('assetStrategy', '素材の用意', choices.assetStrategy, { refresh: true }),
+    ...(p.assetStrategy === 'procedural' ? [] : [field('assetNotes', '素材の提供元・利用条件', 'textarea', { max: limits.assets, required: true, help: '未確定の場合は候補と確認予定を記入してください。許諾を確認するまでは代替素材を使います。' })]),
   ] },
-  { name: 'ファイル', title: 'どんな形で受け取りますか？', note: '用途に合わせて、生成されるゲームのファイル構成を選びます。', fields: () => [
-    select('fileLayout', 'ゲームのファイル構成', choices.fileLayout, { help: '単一HTMLは1ファイルで配布。複数ファイルはゲームの処理とデザインを分けて編集しやすい構成です。' }),
+  { name: 'ファイル', title: 'どんな形で受け取りますか？', note: '用途に合わせて、生成されるゲームのファイル構成を選びます。', fields: (p) => [
+    select('fileLayout', 'ゲームのファイル構成', choices.fileLayout, { refresh: true, help: 'イベントの「HTMLで遊ぶ」には、素材と処理を内包した単一HTMLを使用します。' }),
+    select('techStack', '使用技術', { ...choices.techStack, auto: `推奨 · ${choices.techStack[recommend(p).techStack]}` }, { refresh: true, help: recommend(p).techReason }),
+    ...(p.techStack === 'custom' ? [field('techCustom', '使用技術と依存の同梱方法', 'text', { max: limits.tech, required: true })] : []),
+    select('offlineMode', 'オフライン実行', choices.offlineMode, { help: 'どちらの方式でも、オンライン公開の手順をあわせて出力します。' }),
   ] },
   { name: '設定確認', title: '制作指示書をつくる前に', note: '入力した内容を確認します。各項目から設定に戻れます。' },
 ];

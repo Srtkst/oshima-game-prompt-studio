@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "topics": [
     {
       "id": "sorting", "name": "分けて、つなごう", "category": "暮らし", "provenance": "fictional", "genreId": "sorting",
@@ -15,7 +15,24 @@
       "id": "hello", "name": "あいさつ広場", "category": "交流", "provenance": "fictional", "genreId": "memory",
       "description": "同じしぐさのカードを探して、交流のきっかけに。",
       "story": "架空の団地の広場に、手を振る、おじぎする、手を胸に当てる、ほほえむという4つのしぐさを描いたカードが並ぶ。子どもたちが同じしぐさの絵を見つけるたび、広場に旗が一枚増える。"
-    }
+    },
+    { "id": "lantern", "name": "あかりの通り道", "category": "停電", "provenance": "fictional", "genreId": "explore", "description": "小さな明かりをたどる。", "story": "工作会で作った紙のランタンが並ぶ広場。子どもはランタンの絵を順に探し、架空の夜景を少しずつ照らす。" },
+    { "id": "garden", "name": "プランター日和", "category": "緑化", "provenance": "fictional", "genreId": "snake", "description": "小さな芽を集める。", "story": "広場のミニ菜園に色違いの苗が並ぶ。イモムシ型の台車で苗のカードを集め、模様のある花壇を作る。" },
+    { "id": "bench", "name": "ベンチをひと休み", "category": "共用空間", "provenance": "fictional", "genreId": "coop", "description": "相談しながら広場を整える。", "story": "広場に折りたたみベンチを置く遊び。二人で通り道のマークを避けながら、休憩場所を整える。" },
+    { "id": "rain", "name": "雨の日の足あと", "category": "雨天", "provenance": "fictional", "genreId": "platform", "description": "水たまりを飛び越える。", "story": "雨上がりの模型広場で、紙の長靴をはいたキャラクターが水たまりを飛び越え、傘の絵を集める。" },
+    { "id": "notice", "name": "お知らせ探偵", "category": "掲示板", "provenance": "fictional", "genreId": "mines", "description": "手がかりからお知らせを探す。", "story": "架空の掲示板には、工作会を表す星マークの紙が紛れている。周囲のヒントを使って位置を見つける。" },
+    { "id": "library", "name": "絵本の旅", "category": "読み聞かせ", "provenance": "fictional", "genreId": "maze", "description": "絵本のページを集める。", "story": "読み聞かせ会で使う絵本のページが、紙で作った迷路に散らばった。ページを集めて表紙まで届ける。" },
+    { "id": "workshop", "name": "工作マルシェ", "category": "工作", "provenance": "fictional", "genreId": "falling", "description": "工作のパーツを並べる。", "story": "工作会の机で、形の違う紙のパーツが一つずつ運ばれてくる。空きがないように並べて飾りを作る。" },
+    { "id": "festival", "name": "おまつりのビート", "category": "祭り", "provenance": "fictional", "genreId": "rhythm", "description": "合図を見てリズムを刻む。", "story": "架空のお祭りで、拍子木の合図に合わせて紙の旗を振る。色の違う旗が交互に並んで広場を彩る。" },
+    { "id": "delivery", "name": "おすそわけ便", "category": "助け合い", "provenance": "fictional", "genreId": "runner", "description": "道を選んで小箱を運ぶ。", "story": "交流会で使う折り紙の小箱を、広場の受付まで運ぶ。進むレーンを選び、道具を落とさず届ける。" },
+    { "id": "repair", "name": "ころころ修理工房", "category": "修理", "provenance": "fictional", "genreId": "breakout", "description": "ボールで色見本をめくる。", "story": "工作道具を直す架空の工房。ボールを弾き返して古い色見本をめくると、直した道具の絵が現れる。" },
+    { "id": "water", "name": "みずいろのしるし", "category": "備蓄", "provenance": "fictional", "genreId": "tic", "description": "記号をそろえる。", "story": "防災フェスタの飾り付けに、しずくと葉っぱのマークを置く。先に同じマークを三つ並べたら旗が上がる。" },
+    { "id": "wind", "name": "かざぐるまの空", "category": "風", "provenance": "fictional", "genreId": "shooter", "description": "紙の風車に風を送る。", "story": "広場の上を流れる紙の風車に、風を表す丸い光を届けて回す。人に向けて飛ばす表現は使わない。" },
+    { "id": "stairs", "name": "かいだんスタンプ", "category": "移動", "provenance": "fictional", "genreId": "climb", "description": "模型の段にスタンプを集める。", "story": "集会室に置いた模型の段を、紙の人形で上る。段の端にある形のスタンプを集めて一枚のカードにする。" },
+    { "id": "language", "name": "ことばの身ぶり", "category": "言語交流", "provenance": "fictional", "genreId": "memory", "description": "ことばと身ぶりを絵でつなぐ。", "story": "交流会で、ありがとうの気持ちを絵にしたカードが配られる。異なるカードにも同じ気持ちのマークを見つける。" },
+    { "id": "cleanup", "name": "ひろばの三つの仕事", "category": "片づけ", "provenance": "fictional", "genreId": "micro", "description": "片づけを短い遊びに。", "story": "遊びの後、子どもは広場で紙の旗、積み木、ボールを片づける。短い遊びごとに別の道具を見つける。" },
+    { "id": "map", "name": "まちの地図づくり", "category": "地域探索", "provenance": "fictional", "genreId": "bounce", "description": "模型の地図を開く。", "story": "実在しない広場の模型を描いた地図。弾むスタンプで地図のタイルを開き、木や時計の絵を見つける。" },
+    { "id": "meet", "name": "みんなの記念旗", "category": "世代交流", "provenance": "fictional", "genreId": "coop", "description": "色と形の見本を組み合わせる。", "story": "住民が交流会用の記念旗を作る。片方が形の見本、もう片方が色の見本を見て、相談して部品を決める。" }
   ],
   "genres": [
     {
@@ -29,6 +46,21 @@
     {
       "id": "memory", "name": "絵合わせ", "seconds": 60, "actions": "カードへの移動、カードをめくる",
       "rules": "4組8枚を伏せて並べ、2枚ずつめくる。絵が一致すると10点と旗1枚。一致しない場合は短く見せて裏返す。初期スコア0点。全4組で成功、時間切れで終了。"
-    }
+    },
+    { "id": "platform", "name": "横スクロールアクション", "seconds": 45, "actions": "左右移動とジャンプ", "rules": "3区間の横向きステージを進み、アイテムを取ると10点。障害物に触れたら直前の足場から続ける。3区間を抜けてゴールに着けば成功、時間切れで終了。" },
+    { "id": "runner", "name": "レーンラン", "seconds": 45, "actions": "左右のレーン切替", "rules": "中央からスタートし、3レーンを自動で進む。目標カードは10点、障害物は短く減速。カード8枚で成功、時間切れで結果へ。" },
+    { "id": "falling", "name": "落ちものパズル", "seconds": 80, "actions": "移動・回転・落下", "rules": "6列×10段の盤面に部品を落とす。横一列が埋まれば消えて10点。5列消すと成功。部品が上端を越えるか時間切れで終了。" },
+    { "id": "mines", "name": "ヒント探索パズル", "seconds": 90, "actions": "マスを開く・目印を置く", "rules": "5×5マスに星を4個配置する。開いたマスの数字は隣接する星の数。星を開いたときは穏やかなヒントを表示。4個を正しくマークできれば成功、制限時間で終了。" },
+    { "id": "tic", "name": "3目並べ", "seconds": 70, "actions": "空きマスへの配置", "rules": "3×3盤面を用い、配置側と相手側が交互に空きマスを埋める。縦・横・斜めに同じ記号が3つ揃えば勝ち。満盤は引き分け。1人ではシンプルな自動相手、協力では2人が相談して同じ側を担当。" },
+    { "id": "breakout", "name": "ブロック崩し", "seconds": 60, "actions": "受け皿の左右移動", "rules": "受け皿で玉を返して12枚のパネルを開く。1枚10点。玉が落ちたら中央から再開する。全パネルを開くか制限時間で終了。" },
+    { "id": "shooter", "name": "列をねらうアクション", "seconds": 50, "actions": "左右移動と発射", "rules": "左右に動く対象を光で8回照らす。命中で10点。光は同時に1つだけ出せる。8回達成で成功、時間切れで終了。対人や暴力の演出を避ける。" },
+    { "id": "snake", "name": "つながる収集ゲーム", "seconds": 60, "actions": "進む向きの変更", "rules": "10×10盤面を自動で進み、アイテムごとに列が1マス伸びる。壁や列に当たると初期位置へ戻る。8個を集めるか時間切れで終了。" },
+    { "id": "maze", "name": "迷路収集", "seconds": 75, "actions": "上下左右移動", "rules": "7×7の小さな迷路で6個の印を集める。障害物の巡回経路は一定。接触時は入口から再開。6個を集めて出口へ着くと成功、時間切れで終了。" },
+    { "id": "climb", "name": "段上りアクション", "seconds": 60, "actions": "横移動・はしごを上る", "rules": "4段の模型で、はしごと横移動を使い印を集める。転がる物に触れたら同じ段の端から再開。印3個と最上段で成功、時間切れで終了。" },
+    { "id": "micro", "name": "連続ミニゲーム", "seconds": 60, "actions": "表示されたボタンの選択", "rules": "仕分け・タイミング・記憶の3種類を各2回。開始前に短い操作例を表示し、各成功で10点。6問または全体の制限時間で終了。" },
+    { "id": "bounce", "name": "弾き返しとタイル探索", "seconds": 90, "actions": "受け皿移動とタイル選択", "rules": "ボールで6枚のタイルを開き、現れた数字を手がかりに隠れた星2個を選ぶ。誤答時にヒント。星2個で成功、時間切れで終了。" },
+    { "id": "rhythm", "name": "リズム", "seconds": 60, "actions": "拍に合わせてタップ", "rules": "合図に合わせて16回入力する。判定幅の内側で10点。画面に早い・遅いを表示し、12回以上で成功。最終拍か時間切れで終了。" },
+    { "id": "explore", "name": "探索", "seconds": 100, "actions": "移動と調べる", "rules": "小さな3区画を巡って6個の手がかりを集める。取得した印を表示。全て集めてスタート地点に戻ると成功、時間切れで終了。" },
+    { "id": "coop", "name": "協力パズル", "seconds": 120, "actions": "手がかりの確認と配置", "rules": "二つの見本に合う部品を相談して4回配置する。1人の場合は見本を同時に表示。正解で10点。4回達成で成功、時間切れで終了。" }
   ]
 }

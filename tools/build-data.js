@@ -18,12 +18,17 @@ if (!Number.isInteger(version) || version < 1 || !Array.isArray(topics) || !Arra
   throw new Error('プリセットのID、根拠区分、ジャンル参照、必須項目を確認してください。');
 }
 
-const output = `// Generated from data/presets.json. Run npm run build after editing the source.\nexport const presets = ${JSON.stringify(data, null, 2)};\n`;
-if (process.argv.includes('--check')) {
-  const existing = await readFile(target, 'utf8');
-  if (existing.replaceAll('\r\n', '\n') !== output) {
-    throw new Error('配布プリセットが正本と一致しません。npm run build を実行してください。');
+async function sync(file, output) {
+  if (process.argv.includes('--check')) {
+    const existing = await readFile(file, 'utf8');
+    if (existing.replaceAll('\r\n', '\n') !== output) {
+      throw new Error(`配布データが正本と一致しません。npm run build を実行してください。${file.pathname}`);
+    }
+  } else {
+    await writeFile(file, output);
   }
-} else {
-  await writeFile(target, output);
 }
+
+await sync(target, `// Generated from data/presets.json. Run npm run build after editing the source.\nexport const presets = ${JSON.stringify(data, null, 2)};\n`);
+const html = (await readFile(new URL('../examples/sorting/index.html', import.meta.url), 'utf8')).replaceAll('\r\n', '\n');
+await sync(new URL('../public/games/sorting-demo.json', import.meta.url), JSON.stringify({ title: '分けて、つなごう', html }) + '\n');

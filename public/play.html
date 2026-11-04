@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex">
+  <title>HTMLで遊ぶ | OSHIMA GAME PROMPT STUDIO</title>
+  <link rel="icon" href="./assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-row">
+      <a class="brand" href="./" aria-label="スタジオのホーム">
+        <img src="./assets/logo.svg" width="36" height="36" alt="">
+        <span>OSHIMA<span class="brand-sub">GAME PROMPT STUDIO</span></span>
+      </a>
+      <a class="header-link" href="./">指示書をつくる ↗</a>
+    </div>
+  </header>
+  <main class="container">
+    <section class="panel result game-panel" aria-labelledby="game-title">
+      <p class="eyebrow">PLAY LAB</p>
+      <h1 id="game-title">HTMLで遊ぶ</h1>
+      <p id="game-status" class="intro" role="status">PCはドラッグ＆ドロップ、スマートフォンはファイルを選んで試遊できます。</p>
+      <div id="game-import" class="drop-area">
+        <label for="game-file"><strong>ゲームのHTMLをここにドロップ</strong></label>
+        <p class="hint" id="game-format">画像・音・コードを内包したUTF-8の単一HTML（512 KBまで）</p>
+        <input id="game-file" type="file" accept=".html,.htm,text/html" aria-describedby="game-format">
+        <a href="?game=sorting-demo">公開済みの仕分けゲームを試す ↗</a>
+      </div>
+      <div id="game-view" hidden>
+        <div class="preview-bar"><span id="game-label">試遊画面</span><button type="button" id="game-restart" class="text-button">はじめから</button></div>
+        <iframe id="game-frame" class="game-frame" title="ゲーム画面" sandbox="allow-scripts" referrerpolicy="no-referrer" allow="camera 'none'; microphone 'none'; geolocation 'none'"></iframe>
+      </div>
+      <details id="game-staff" class="share-panel" hidden>
+        <summary>補助生徒・運営者の公開操作</summary>
+        <form id="game-publish" class="wizard-form">
+          <p class="hint">公開URLを知っている人が作品を開けます。公開期間は24時間です。</p>
+          <div class="field"><label class="field-label" for="game-name">公開名</label><input id="game-name" type="text" maxlength="80" required></div>
+          <div class="field"><label class="field-label" for="game-key">イベント公開キー</label><input id="game-key" type="password" maxlength="150" autocomplete="off" required></div>
+          <label class="check"><input id="game-approval" type="checkbox" required> タッチ操作、個人情報、内容を確認済み</label>
+          <div class="result-actions"><button class="button primary" type="submit">公開してQRをつくる</button></div>
+          <p id="publish-status" class="hint" role="status"></p>
+        </form>
+      </details>
+      <details id="game-static" class="share-panel" hidden>
+        <summary>運営者がGitHub Pagesに事前登録する</summary>
+        <p class="hint">確認済みの作品を登録用JSONで保存します。ファイルをリポジトリの <code>public/games/</code> に配置し、公開が反映されたら、表示した作品URLでQRを作れます。</p>
+        <p class="hint">会場で読み込んだ作品をすぐにQRで配る場合は、運営PCでイベント配信モードを使います。</p>
+        <button id="game-export" class="button secondary" type="button">事前登録用JSONを保存</button>
+        <p id="game-static-status" class="hint" role="status"></p>
+      </details>
+      <details id="game-existing" class="share-panel">
+        <summary>公開済みゲームのURLからQRをつくる</summary>
+        <form id="game-qr-form" class="wizard-form">
+          <div class="field"><label class="field-label" for="game-url">公開済みURL</label><input id="game-url" type="url" placeholder="https://…" maxlength="700" required></div>
+          <button class="button secondary" type="submit">QRをつくる</button>
+          <p class="hint" id="game-qr-status" role="status"></p>
+        </form>
+      </details>
+      <div id="game-share" class="share-panel" hidden>
+        <h2>スマートフォンで遊ぶ</h2>
+        <img id="game-qr" alt="ゲームを開くQRコード" width="220" height="220">
+        <p><a id="game-link" target="_blank" rel="noopener noreferrer"></a></p>
+        <button id="game-remove" class="button secondary" type="button" hidden>この作品の公開を終了</button>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="./js/play.js"></script>
+</body>
+</html>
