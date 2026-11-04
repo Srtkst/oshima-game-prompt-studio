@@ -1,0 +1,686 @@
+<!doctype html>
+<!--
+  おまつりのビート / Festival Beat
+  起動: このファイルをブラウザで開く。配信時は任意のサブディレクトリに置く。
+  構成: HTML = 画面、CSS = レイアウト・記号、Canvas = 手描きのドット座標、
+        JS = 翻訳・入力・判定、Web Audio = BGMと拍子木の合成。外部素材・通信なし。
+  試験手順と確認環境は末尾のコメントを参照。
+-->
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#F8F7EE">
+  <link rel="icon" href="data:,">
+  <title>おまつりのビート</title>
+  <style>
+    :root{color-scheme:light;--ink:#18251f;--paper:#f8f7ee;--lime:#ddeb98;--green:#385b4b;--dim:#43564a;--line:#b6bda8;--cream:#eeeddf;--orange:#f6bb79;--red:#9c3d2d;--mono:ui-monospace,Consolas,monospace}
+    *,*::before,*::after{box-sizing:border-box}
+    [hidden]{display:none!important}
+    body{margin:0;color:var(--ink);background:var(--paper);background-image:radial-gradient(#dadbca 0.7px,transparent 0.7px);background-size:12px 12px;font-family:system-ui,"Yu Gothic",Meiryo,sans-serif;font-weight:550;line-height:1.55}
+    button,input{font:inherit;color:inherit}
+    button{cursor:pointer;touch-action:manipulation}
+    button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid #2a6c58;outline-offset:4px}
+    svg{width:1.25em;height:1.25em;vertical-align:middle;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:square;stroke-linejoin:miter;flex:none}
+    .site{width:min(1160px,calc(100% - 88px));margin:auto}
+    .mast{border-top:6px solid var(--ink);border-bottom:1px solid var(--line);background:var(--paper)}
+    .mast .site,.foot .site{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:72px}
+    .brand{display:flex;align-items:center;gap:11px;font:800 12px/1.15 var(--mono);letter-spacing:.09em}
+    .brand-mark{display:grid;place-items:center;width:39px;height:39px;background:var(--ink);color:var(--lime)}
+    .brand-mark svg{width:24px;height:24px}
+    .tools,.languages{display:flex;align-items:center;gap:8px}
+    .languages{padding:3px;border:1px solid var(--line);gap:3px;background:var(--paper)}
+    .language,.sound-toggle{min-height:44px;border:0;background:transparent;font-weight:800;font-size:.83rem;padding:0 10px}
+    .language{min-width:48px}
+    .language[aria-pressed="true"]{color:var(--paper);background:var(--ink)}
+    .sound-toggle{display:grid;place-items:center;width:46px;border:1px solid var(--ink);background:var(--paper)}
+    .language:hover:not([aria-pressed="true"]),.sound-toggle:hover,.secondary:hover{background:var(--cream)}
+    .volume{display:flex;align-items:center;gap:8px;font-size:.82rem;font-weight:750;white-space:nowrap}
+    .volume input{width:86px;height:44px;margin:0;accent-color:var(--green);cursor:pointer}
+    .frame{display:grid;grid-template-columns:minmax(0, .87fr) minmax(0, 1.13fr);gap:clamp(26px,4.7vw,68px);align-items:center;padding-block:clamp(35px,6.3vw,88px)}
+    .screen{min-width:0}
+    .eyebrow{display:flex;align-items:center;gap:9px;margin:0 0 17px;font:800 .77rem/1.4 var(--mono);letter-spacing:.095em;color:var(--dim)}
+    .eyebrow::before{content:"";width:10px;height:10px;background:var(--green);box-shadow:3px 3px var(--lime);flex:none}
+    h1,h2,p{margin-top:0}
+    .hero{font-size:clamp(3.1rem,5.8vw,5.65rem);line-height:.99;letter-spacing:-.085em;font-weight:950;margin:0 0 25px}
+    .hero span{display:block}
+    .hero .under{width:max-content;max-width:100%;padding-right:.12em;background:linear-gradient(transparent 69%,var(--lime) 69%,var(--lime) 96%,transparent 96%)}
+    html[lang="en"] .hero{letter-spacing:-.072em}
+    .screen-title{font-size:clamp(2rem,4.3vw,3.75rem);letter-spacing:-.065em;font-weight:950;line-height:1.06;margin-bottom:16px}
+    .lead{font-size:clamp(1rem,1.4vw,1.125rem);line-height:1.8;max-width:31em;color:var(--dim);margin:0 0 24px}
+    .facts{margin:0 0 25px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));background:var(--paper);border-block:1px solid var(--line)}
+    .facts>div{padding:10px 9px 11px 0;min-width:0}
+    .facts>div+div{border-left:1px solid var(--line);padding-left:clamp(8px,1.5vw,17px)}
+    .facts dd{margin:0;font:900 1.65rem/1.2 var(--mono)}
+    .facts dt{font-size:.77rem;color:var(--dim);line-height:1.3}
+    .primary,.secondary{display:flex;align-items:center;justify-content:center;gap:11px;min-height:57px;padding:11px 16px;border:2px solid var(--ink);font-weight:850;line-height:1.3;text-align:center}
+    .primary{background:var(--lime);box-shadow:4px 4px var(--ink)}
+    .primary:hover{background:#eaf3b9}
+    .primary:active{transform:translate(3px,3px);box-shadow:1px 1px var(--ink)}
+    .secondary{background:var(--paper);min-height:52px}
+    .wide{width:100%;justify-content:space-between;text-align:left}
+    .actions{display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;margin-top:17px}
+    .instructions{list-style:none;padding:0;margin:0 0 14px;display:grid;gap:8px}
+    .instructions li{display:grid;grid-template-columns:30px 1fr;gap:9px;align-items:start;font-size:.95rem;line-height:1.5}
+    .instructions b{display:grid;place-items:center;background:var(--ink);color:var(--lime);font:800 .76rem var(--mono);height:26px}
+    .guide-hint{margin:0 0 16px;color:var(--dim);font-size:.83rem;line-height:1.45}
+    fieldset{margin:0;padding:0;border:0;min-inline-size:0}
+    legend{padding:0;margin-bottom:6px;font-size:.87rem;font-weight:850}
+    .choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+    .choices label{display:grid;cursor:pointer;min-width:0}
+    .choices input{opacity:0;position:absolute;width:1px;height:1px}
+    .choices span{display:grid;place-items:center;min-height:44px;border:1px solid var(--ink);background:var(--paper);font-size:.85rem;font-weight:800;text-align:center;padding:5px}
+    .choices input:checked+span{background:var(--ink);color:var(--paper)}
+    .choices input:focus-visible+span{outline:3px solid #2a6c58;outline-offset:2px}
+    .difficulty-note{margin:7px 0 0;color:var(--dim);font-size:.82rem;min-height:2.6em;line-height:1.3}
+    .stage{margin:0;background:var(--ink);border:3px solid var(--ink);box-shadow:7px 7px #bac2a7;min-width:0}
+    .art{position:relative;background:#20443f;isolation:isolate}
+    canvas{display:block;width:100%;height:auto;image-rendering:pixelated}
+    .art::after{content:"";position:absolute;inset:0;pointer-events:none;border:1px solid #f8f7ee38}
+    .stage-label{color:var(--paper);min-height:54px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 14px;font-weight:800;font-size:.82rem}
+    .stage-label .serial{font:800 .72rem var(--mono);letter-spacing:.08em;color:var(--lime);margin-right:9px}
+    .badge-flags{display:flex;align-items:center;gap:6px}
+    .flag-glyph{display:grid;place-items:center;width:23px;height:23px;background:var(--orange);color:var(--ink);font-size:17px;line-height:1;font-family:Arial,sans-serif;font-weight:900}
+    .flag-glyph+ .flag-glyph{background:var(--lime)}
+    .tap-wrap{padding:8px;background:var(--ink)}
+    .tap{box-shadow:none;width:100%;min-height:65px;justify-content:space-between;border:2px solid var(--lime);font-size:1.25rem;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+    .tap:focus-visible{outline:3px solid var(--paper);outline-offset:-6px}
+    .tap:active,.tap[data-down="true"]{transform:none;box-shadow:inset 0 4px #81904a;background:#eaf3b9}
+    .tap kbd{font:800 .73rem var(--mono);border:1px solid var(--green);padding:4px 5px;white-space:nowrap}
+    .tap-label{display:flex;align-items:center;gap:10px}
+    .play-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+    .play-top .eyebrow{margin-bottom:8px}
+    .timer{display:grid;justify-items:end;white-space:nowrap;line-height:1.15;color:var(--dim);font-size:.74rem}
+    .timer strong{font:900 1.55rem var(--mono);color:var(--ink)}
+    .play-title{font-size:clamp(1.55rem,3.1vw,2.55rem);font-weight:950;letter-spacing:-.05em;margin:0 0 11px;line-height:1.05}
+    .beat-grid{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:4px;margin-bottom:15px}
+    .beat-grid span{display:grid;place-items:center;height:clamp(20px,3vw,33px);font:800 .72rem var(--mono);background:var(--paper);border:1px solid var(--line)}
+    .beat-grid span[data-mark="hit"]{background:var(--lime);border-color:var(--ink)}
+    .beat-grid span[data-mark="miss"]{background:var(--cream);color:var(--dim)}
+    .beat-grid span[data-current="true"]{outline:2px solid var(--ink);outline-offset:-2px}
+    .metronome{border:1px solid var(--ink);background:var(--paper);padding:11px 12px 12px;margin-bottom:11px}
+    .metro-top{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:33px;font-size:.83rem;color:var(--dim);font-weight:800}
+    .beat-now{color:var(--paper);background:var(--ink);padding:4px 8px;font-size:.82rem;white-space:nowrap}
+    .beat-now[data-cue="now"]{color:var(--ink);background:var(--lime);outline:2px solid var(--ink)}
+    .track{height:16px;position:relative;margin:6px 8px 0}
+    .track::before{content:"";position:absolute;inset:7px 0;height:2px;background:var(--line)}
+    .track::after{content:"";position:absolute;right:-3px;top:0;width:6px;height:16px;background:var(--ink)}
+    .track-dot{position:absolute;left:0;top:3px;width:10px;height:10px;background:var(--green);transform:translateX(-50%) rotate(45deg);z-index:1}
+    .feedback{display:flex;justify-content:space-between;align-items:center;gap:6px;min-height:31px;margin-bottom:6px}
+    .feedback span:first-child{font-size:.95rem;font-weight:900}
+    .feedback span[data-tone="miss"]{color:var(--red)}
+    .feedback span:last-child{white-space:nowrap;font:900 .89rem var(--mono)}
+    .stage-cue{position:absolute;inset:0;pointer-events:none;border:0 solid var(--lime);display:grid;justify-items:center;align-content:start;padding-top:5%;z-index:1}
+    .stage-cue[data-cue="now"]{border-width:5px}
+    .stage-cue span{display:none;align-items:center;gap:8px;padding:2px 10px;background:var(--lime);color:var(--ink);box-shadow:3px 3px var(--ink);font-weight:950;font-size:clamp(.9rem,2.5vw,1.45rem);line-height:1.4}
+    .stage-cue[data-cue="now"] span{display:flex}
+    .results{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);margin:20px 0 16px}
+    .results>div{background:var(--paper);padding:12px 14px}
+    .results dt{font-size:.79rem;color:var(--dim)}
+    .results dd{margin:0;font:900 clamp(1.32rem,3vw,2rem) var(--mono);white-space:nowrap}
+    .results small{font-size:.62em;color:var(--dim)}
+    .foot{background:var(--paper);border-block:1px solid var(--line)}
+    .foot .site{min-height:60px}
+    .fiction{font-size:.79rem;line-height:1.45;color:var(--dim);margin:0}
+    .fiction::before{content:"◇";display:inline-block;margin-right:6px;font-weight:950}
+    .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+    @media (hover:none) and (any-pointer:coarse){.tap kbd{display:none}}
+    @media(max-width:840px){.site{width:calc(100% - 48px)}.frame{gap:26px}.hero{font-size:clamp(2.9rem,6.7vw,4.5rem)}}
+    @media(max-width:660px){
+      .site{width:calc(100% - 34px)}.mast .site{min-height:62px}.frame{display:flex;flex-direction:column;align-items:stretch;gap:25px;padding-block:30px 34px}
+      .hero{font-size:clamp(3rem,12.1vw,4.8rem);margin-bottom:16px}.eyebrow{margin-bottom:13px}.lead{margin-bottom:16px;line-height:1.65}
+      .facts{margin-bottom:15px}.stage{box-shadow:4px 4px #bac2a7}.stage-label{min-height:44px}
+      .frame[data-page="play"]{padding-block:15px 20px;gap:9px}.beat-grid{margin-bottom:8px}.metronome{padding:3px 8px 7px;margin-bottom:5px}
+      .play-title{margin-bottom:7px}.feedback{margin-bottom:0;min-height:26px}.play-top .eyebrow{margin-bottom:4px}
+      .frame[data-page="play"] canvas{width:100%;height:auto;max-height:clamp(72px,calc(100svh - 400px),250px);object-fit:cover;object-position:center 65%}
+      .tap-wrap{padding:5px}.tap{min-height:60px}.foot .site{gap:8px}.volume{gap:4px}.volume input{width:60px}
+    }
+    @media(min-width:661px) and (max-height:590px){.frame[data-page="play"]{padding-block:15px}.frame[data-page="play"] canvas{max-height:clamp(72px,calc(100svh - 183px),280px);object-fit:cover;object-position:center 63%}}
+    @media(max-width:360px){.site{width:calc(100% - 24px)}.tools{gap:4px}.brand{gap:6px;font-size:.66rem}.brand-mark{width:32px;height:32px}.language{padding-inline:6px}.actions{gap:8px}.actions button{padding-inline:8px}}
+    @media(prefers-reduced-motion:reduce){.primary:active{transform:none}}
+  </style>
+</head>
+<body>
+  <svg class="sr-only" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="sticks" viewBox="0 0 24 24"><path d="m3 17 11-11 4 4L7 21zM10 16l5 5 4-4-5-5M5 3v3M2 7h3M19 2v3M22 7h-3"/></symbol>
+    <symbol id="speaker" viewBox="0 0 24 24"><path d="M3 9h4l5-4v14l-5-4H3zM15 9c2 1 2 5 0 6m3-9c4 3 4 9 0 12"/></symbol>
+    <symbol id="silent" viewBox="0 0 24 24"><path d="M3 9h4l5-4v14l-5-4H3zM16 9l5 6m0-6-5 6"/></symbol>
+    <symbol id="arrow" viewBox="0 0 24 24"><path d="M3 12h17m-7-7 7 7-7 7"/></symbol>
+    <symbol id="flag" viewBox="0 0 24 24"><path d="M5 21V3m0 1h14l-3 4 3 4H5"/></symbol>
+  </svg>
+  <header class="mast">
+    <div class="site">
+      <div class="brand" aria-label="Hiroba Rhythm Club"><span class="brand-mark"><svg aria-hidden="true"><use href="#sticks"/></svg></span><span aria-hidden="true">HIROBA<br>RHYTHM CLUB</span></div>
+      <div class="tools">
+        <div class="languages" id="languages" role="group" data-label="language">
+          <button type="button" class="language" lang="ja" data-lang="ja" aria-pressed="true">日本語</button>
+          <button type="button" class="language" lang="en" data-lang="en" aria-pressed="false">EN</button>
+        </div>
+        <button type="button" class="sound-toggle" id="mute" aria-pressed="false" data-label="mute"><svg aria-hidden="true"><use href="#speaker"/></svg></button>
+      </div>
+    </div>
+  </header>
+  <main class="frame site" id="frame" data-page="title">
+    <section class="screen" id="title" aria-labelledby="game-title">
+      <p class="eyebrow" data-t="titleKicker"></p>
+      <h1 class="hero" id="game-title" tabindex="-1"><span data-t="title1">おまつりの</span><span class="under" data-t="title2">ビート</span></h1>
+      <p class="lead" data-t="intro"></p>
+      <dl class="facts"><div><dd>16</dd><dt data-t="beats"></dt></div><div><dd>12</dd><dt data-t="toWin"></dt></div><div><dd>01</dd><dt data-t="players"></dt></div></dl>
+      <button class="primary wide" type="button" id="guide-button"><span data-t="guideButton"></span><svg aria-hidden="true"><use href="#arrow"/></svg></button>
+    </section>
+    <section class="screen" id="guide" aria-labelledby="guide-heading" hidden>
+      <p class="eyebrow" data-t="guideKicker"></p>
+      <h2 class="screen-title" id="guide-heading" tabindex="-1" data-t="guideHeading"></h2>
+      <ol class="instructions">
+        <li><b aria-hidden="true">01</b><span data-t="step1"></span></li>
+        <li><b aria-hidden="true">02</b><span data-t="step2"></span></li>
+        <li><b aria-hidden="true">03</b><span data-t="step3"></span></li>
+      </ol>
+      <p class="guide-hint" data-t="keys"></p>
+      <fieldset><legend data-t="difficulty"></legend><div class="choices">
+        <label><input type="radio" name="level" value="easy"><span data-t="easy"></span></label>
+        <label><input type="radio" name="level" value="normal" checked><span data-t="normal"></span></label>
+        <label><input type="radio" name="level" value="hard"><span data-t="hard"></span></label>
+      </div></fieldset>
+      <p class="difficulty-note" id="difficulty-note"></p>
+      <div class="actions"><button class="primary wide" type="button" id="start"><span data-t="start"></span><svg aria-hidden="true"><use href="#arrow"/></svg></button><button class="secondary home" type="button" data-t="home"></button></div>
+    </section>
+    <section class="screen" id="play" aria-labelledby="play-heading" hidden>
+      <div class="play-top"><p class="eyebrow" id="play-kicker"></p><div class="timer"><span data-t="timeLeft"></span><strong id="time-left">1:00</strong></div></div>
+      <h2 class="play-title" id="play-heading" data-t="playHeading"></h2>
+      <div class="beat-grid" id="beat-grid" aria-hidden="true"></div>
+      <div class="metronome">
+        <div class="metro-top"><span id="next-beat"></span><span class="beat-now" id="cue-word"></span></div>
+        <div class="track" id="track" aria-hidden="true"><span class="track-dot" id="track-dot"></span></div>
+      </div>
+      <div class="feedback"><span id="feedback" role="status"></span><span id="live-score"></span></div>
+    </section>
+    <section class="screen" id="result" aria-labelledby="result-heading" hidden>
+      <p class="eyebrow" data-t="resultKicker"></p>
+      <h2 class="screen-title" id="result-heading" tabindex="-1"></h2>
+      <p class="lead" id="result-copy"></p>
+      <dl class="results"><div><dt data-t="score"></dt><dd><span id="final-score"></span><small> / 160</small></dd></div><div><dt data-t="onBeat"></dt><dd><span id="final-hits"></span><small> / 16</small></dd></div></dl>
+      <div class="actions"><button class="primary wide" type="button" id="retry"><span data-t="retry"></span><svg aria-hidden="true"><use href="#arrow"/></svg></button><button class="secondary home" type="button" data-t="home"></button></div>
+    </section>
+    <figure class="stage" aria-labelledby="stage-label" id="stage">
+      <div class="art">
+        <canvas id="scene" width="320" height="204" aria-hidden="true"></canvas>
+        <div class="stage-cue" id="stage-cue" aria-hidden="true" hidden><span><svg><use href="#sticks"/></svg><b data-t="now"></b></span></div>
+      </div>
+      <figcaption class="stage-label" id="stage-label"><span><span class="serial" aria-hidden="true">01 /</span><span data-t="stage"></span></span><span class="badge-flags" aria-hidden="true"><span class="flag-glyph">○</span><span class="flag-glyph">◆</span></span></figcaption>
+      <div class="tap-wrap" id="tap-wrap" hidden><button class="primary tap" id="tap" type="button"><span class="tap-label"><svg aria-hidden="true"><use href="#flag"/></svg><span data-t="tap"></span></span><kbd aria-hidden="true">SPACE / ENTER</kbd></button></div>
+    </figure>
+  </main>
+  <footer class="foot"><div class="site"><p class="fiction" data-t="fiction"></p><label class="volume"><span data-t="volume"></span><input id="volume" type="range" min="0" max="100" value="55"></label></div></footer>
+  <script>
+  'use strict';
+  const words = {
+    ja: {
+      name:'おまつりのビート',language:'言語',mute:'ミュート',volume:'音量',titleKicker:'ひろばのリズムゲーム',title1:'おまつりの',title2:'ビート',
+      intro:'カチッ、カチッ。拍子木の合図に合わせて紙の旗をふろう。丸とひし形の旗で、夕暮れの広場を彩ってね。',
+      beats:'合図の数',toWin:'回で成功',players:'人であそぶ',guideButton:'あそび方へ',stage:'ちょうちん広場',fiction:'このお祭り・広場・登場人物は架空です。',
+      guideKicker:'あそぶ前に',guideHeading:'あそび方',step1:'拍子木の音か、画面の「いま！」を合図にしてね。',
+      step2:'旗のボタンをタップ・クリック。Space または Enter でも旗をふれるよ。',step3:'合図は16回。ぴったりで10点、12回以上で成功！ 制限時間は60秒。',
+      keys:'メニューの移動と難易度の選択は矢印キーでもできます。',difficulty:'むずかしさ',easy:'かんたん',normal:'ふつう',hard:'むずかしい',
+      easyNote:'ゆっくり。次の合図の目安が長く出ます。',normalNote:'ふつうの速さ。次の合図の目安が出ます。',hardNote:'速め。拍子木の音か「いま！」が手がかりです。',
+      start:'スタート',home:'タイトルへ',playKicker:'プレイ中',playHeading:'拍に合わせよう',timeLeft:'のこり時間',
+      next:(n,total)=>`${n} / ${total} 拍目`,now:'いま！',ready:'よーい',soon:'つぎの合図',
+      tap:'旗をふる',wait:'合図を待ってね',hit:'✓ ぴったり！',early:'← はやい',late:'→ おそい',points:n=>`${n} 点`,
+      resultKicker:'リザルト',win:'成功！',tryAgain:'おつかれさま！',timeout:'時間切れ',
+      winCopy:'12回以上、拍に合いました。',missCopy:'成功まであと{n}回。',timeCopy:'60秒が経過しました。',score:'スコア',onBeat:'拍に合った回数',retry:'もう一度'
+    },
+    en: {
+      name:'Festival Beat',language:'Language',mute:'Mute',volume:'Volume',titleKicker:'A PLAZA RHYTHM GAME',title1:'Festival',title2:'Beat',
+      intro:'Clack, clack! Wave a paper flag to the wooden clappers. Fill the plaza with circles and diamonds as the sun goes down.',
+      beats:'beats',toWin:'hits to win',players:'player',guideButton:'How to play',stage:'Lantern Plaza',fiction:'The festival, plaza and characters are fictional.',
+      guideKicker:'BEFORE YOU PLAY',guideHeading:'How to play',step1:'Listen for the wooden clappers or watch for “NOW!” on screen.',
+      step2:'Tap or click the flag button. You can also press Space or Enter to wave.',step3:'There are 16 beats. Get 10 points per hit. Land 12 to win! You have 60 seconds.',
+      keys:'Use the arrow keys to move through menus and pick a difficulty.',difficulty:'Difficulty',easy:'Easy',normal:'Normal',hard:'Hard',
+      easyNote:'A slower beat with a longer visual countdown.',normalNote:'A steady beat with a visual guide to the next cue.',hardNote:'A faster beat. Listen for the clappers or watch for “NOW!”',
+      start:'Start',home:'Title screen',playKicker:'IN PLAY',playHeading:'Catch the beat',timeLeft:'TIME LEFT',
+      next:(n,total)=>`Beat ${n} / ${total}`,now:'NOW!',ready:'Get ready',soon:'Next cue',
+      tap:'Wave flag',wait:'Wait for the cue',hit:'✓ On beat!',early:'← Too early',late:'→ Too late',points:n=>`${n} pts`,
+      resultKicker:'RESULTS',win:'You did it!',tryAgain:'Nice try!',timeout:'Time’s up',
+      winCopy:'You hit at least 12 beats.',missCopy:'Hits needed to win: {n}.',timeCopy:'The 60 seconds are up.',score:'Score',onBeat:'Beats hit',retry:'Play again'
+    }
+  };
+  const $ = id => document.getElementById(id);
+  const TOTAL = 16, GOAL = 12, WINDOW = 180, LIMIT = 60_000, LEAD = 2600;
+  const EPSILON = .000001; // Sub-microsecond roundoff when comparing inclusive boundaries.
+  const levels = {
+    easy:{period:1240,hint:1080,flash:180}, normal:{period:990,hint:690,flash:150}, hard:{period:760,hint:0,flash:122}
+  };
+  let lang = 'ja', page = 'title', level = 'normal', run = null, muted = false, ctx, volume, startBusy = false;
+  const tap = $('tap'), frame = $('frame'), icons = $('mute').querySelector('use');
+  const tr = key => words[lang][key];
+  const timing = location.hash === '#timing' ? {cues:[],inputs:[],clock:'',end:null} : null;
+  if (timing) window.festivalTiming = timing;
+
+  function translate() {
+    document.documentElement.lang = lang;
+    document.title = tr('name');
+    document.querySelectorAll('[data-t]').forEach(el => { el.textContent = tr(el.dataset.t); });
+    document.querySelectorAll('[data-label]').forEach(el => { el.setAttribute('aria-label',tr(el.dataset.label)); });
+    document.querySelectorAll('[data-lang]').forEach(el => el.setAttribute('aria-pressed',String(el.dataset.lang === lang)));
+    updateDifficulty();
+  }
+  function updateDifficulty() { $('difficulty-note').textContent = tr(`${level}Note`); }
+  function show(next, focus = true) {
+    page = next;
+    frame.dataset.page = next;
+    for (const id of ['title','guide','play','result']) $(id).hidden = id !== next;
+    $('languages').hidden = next !== 'title';
+    $('stage-label').hidden = next === 'play';
+    $('tap-wrap').hidden = $('stage-cue').hidden = next !== 'play';
+    if (focus) {
+      window.scrollTo(0,0);
+      $({title:'game-title',guide:'guide-heading',play:'tap',result:'result-heading'}[next]).focus({preventScroll:true});
+    }
+  }
+  $('languages').addEventListener('click', e => {
+    const key = e.target.closest('[data-lang]')?.dataset.lang;
+    if (key) { lang = key; translate(); }
+  });
+  $('guide-button').addEventListener('click', () => { unlockAudio(); show('guide'); });
+  document.querySelectorAll('.home').forEach(el => el.addEventListener('click', () => { show('title'); paintScene('idle'); }));
+  document.querySelectorAll('[name="level"]').forEach(el => el.addEventListener('change', () => { level = el.value; updateDifficulty(); }));
+  $('start').addEventListener('click', startGame);
+  $('retry').addEventListener('click', startGame);
+
+  // Native radios and sliders keep their own arrow keys. The other menu controls form a focus loop.
+  document.addEventListener('keydown', e => {
+    if (page === 'play' || e.altKey || e.ctrlKey || e.metaKey || e.target.matches?.('input') ||
+        !['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) return;
+    const controls = [...document.querySelectorAll('button, input[type="radio"]:checked')].filter(el => !el.closest('[hidden]'));
+    if (!controls.length) return;
+    const at = controls.indexOf(document.activeElement);
+    const dir = (e.key === 'ArrowRight' || e.key === 'ArrowDown') ? 1 : -1;
+    e.preventDefault();
+    controls[at < 0 ? (dir > 0 ? 0 : controls.length-1) : (at + dir + controls.length) % controls.length].focus();
+  });
+  $('mute').addEventListener('click', () => {
+    muted = !muted;
+    if (!muted) unlockAudio();
+    icons.setAttribute('href',muted ? '#silent' : '#speaker');
+    $('mute').setAttribute('aria-pressed',String(muted));
+    setVolume();
+  });
+  $('volume').addEventListener('input',setVolume);
+
+  function unlockAudio() {
+    try {
+      const Audio = window.AudioContext || window.webkitAudioContext;
+      if (!Audio) return Promise.resolve(false);
+      if (!ctx) {
+        ctx = new Audio();
+        volume = ctx.createGain(); volume.gain.value = 0; volume.connect(ctx.destination); setVolume();
+      }
+      return (ctx.state === 'running' ? Promise.resolve() : ctx.resume()).then(() => ctx.state === 'running', () => false);
+    } catch { return Promise.resolve(false); }
+  }
+  function setVolume() {
+    if (volume) volume.gain.setTargetAtTime(muted ? 0 : Number($('volume').value)/100,ctx.currentTime,.015);
+  }
+  // One monotonic timeline in milliseconds for input, beats, visuals and the deadline.
+  // A sample of the audio output clock maps that same timeline onto scheduled audio seconds.
+  function audioAt(perf) {
+    const out = ctx.getOutputTimestamp?.();
+    if (out?.contextTime > 0 && out.performanceTime > 0 && Math.abs(perf-out.performanceTime) < 750) {
+      return out.contextTime + (perf-out.performanceTime)/1000;
+    }
+    return ctx.currentTime - (ctx.baseLatency || 0) - (ctx.outputLatency || 0);
+  }
+  function scheduleAudio(r) {
+    r.bus = ctx.createGain(); r.bus.connect(volume);
+    const at = elapsed => r.audioStart + elapsed/1000;
+    const melody = [293.66,369.99,440,369.99,329.63,369.99,493.88,440];
+    r.beats.forEach((b,i) => {
+      const time = at(b.at);
+      tone(r,time,810,320,.074,.34,'triangle');
+      tone(r,time,1680,910,.036,.125,'square');
+      tone(r,time + r.profile.period*.32/1000,melody[i%8],melody[i%8],.16,.057,'sine');
+      tone(r,time + r.profile.period*.63/1000,melody[(i+2)%8]/2,melody[(i+2)%8]/2,.14,.043,'triangle');
+    });
+  }
+  function tone(r, at, hz, endHz, duration, gain, type) {
+    const osc = ctx.createOscillator(), env = ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(hz,at); osc.frequency.exponentialRampToValueAtTime(endHz,at+duration);
+    env.gain.setValueAtTime(.0001,at); env.gain.linearRampToValueAtTime(gain,at+.004); env.gain.exponentialRampToValueAtTime(.0001,at+duration);
+    osc.connect(env); env.connect(r.bus); r.nodes.add(osc);
+    osc.onended = () => { r.nodes.delete(osc); osc.disconnect(); env.disconnect(); };
+    osc.start(at); osc.stop(at+duration+.01);
+  }
+  function stopAudio(r) {
+    if (!r.bus) return;
+    r.bus.disconnect(); r.bus = null;
+    for (const osc of r.nodes) { try { osc.stop(); } catch {} }
+    r.nodes.clear();
+  }
+
+  async function startGame() {
+    if (startBusy || run || (page !== 'guide' && page !== 'result')) return;
+    startBusy = true;
+    // Capture Start immediately; the audio context can join during the initial ready interval.
+    const perf = performance.now(), profile = levels[level];
+    const ready = unlockAudio();
+    const r = {zero:perf,profile,beats:Array.from({length:TOTAL},(_,i)=>({at:LEAD+i*profile.period,mark:'',shown:false})),
+      hits:0,next:0,feedback:'wait',feedbackAt:-Infinity,pose:'idle',input:new AbortController(),nodes:new Set(),bus:null,raf:0,alarm:0};
+    run = r;
+    if (timing) { timing.cues.length = timing.inputs.length = 0; timing.clock = 'performance'; timing.end = null; }
+    $('play-kicker').textContent = `${tr('playKicker')} / ${tr(level)}`;
+    tap.dataset.down = 'false';
+    show('play');
+    const opts = {signal:r.input.signal};
+    tap.addEventListener('pointerdown', e => {
+      if (e.isPrimary && e.button === 0) judge(r,e);
+    },opts);
+    tap.addEventListener('click', e => { if (e.detail === 0) judge(r,e); },opts);
+    document.addEventListener('keydown',e => {
+      if (!['Space','Enter','NumpadEnter'].includes(e.code) && ![' ','Enter'].includes(e.key)) return;
+      if (e.altKey || e.ctrlKey || e.metaKey || e.target.closest?.('input,button:not(#tap)')) return;
+      e.preventDefault();
+      if (!e.repeat) judge(r,e);
+    },opts);
+    document.addEventListener('visibilitychange',() => { if (!document.hidden) update(r); },opts);
+    window.addEventListener('pagehide',() => finish(r,'leave'),opts);
+    r.alarm = setTimeout(() => finish(r,'timeout'),Math.max(0,LIMIT-(performance.now()-perf)));
+    renderPlay(r,0);
+    r.raf = requestAnimationFrame(() => tick(r));
+    startBusy = false;
+    if (await ready && run === r && performance.now()-perf < LEAD-350) {
+      try {
+        const sample = performance.now();
+        r.audioStart = audioAt(sample) - (sample-r.zero)/1000;
+        scheduleAudio(r);
+        if (timing) timing.clock = 'performance ↔ Web Audio output';
+        ctx.addEventListener('statechange',() => { if (ctx.state !== 'running') stopAudio(r); },opts);
+      } catch { stopAudio(r); }
+    }
+  }
+  function inputTime(event, now) {
+    const stamp = event.timeStamp > 1e12 ? event.timeStamp-performance.timeOrigin : event.timeStamp;
+    return stamp > 0 && stamp <= now+1 ? Math.min(stamp,now) : now;
+  }
+  function judge(r,e) {
+    if (run !== r) return;
+    const now = performance.now(), stamp = inputTime(e,now), elapsed = stamp-r.zero;
+    if (elapsed < 0) return;
+    if (now-r.zero >= LIMIT) { finish(r,'timeout'); return; }
+    advance(r,elapsed);
+    const index = Math.max(0,Math.min(TOTAL-1,Math.round((elapsed-LEAD)/r.profile.period)));
+    const b = r.beats[index], delta = elapsed-b.at;
+    let feedback;
+    if (delta < -r.profile.period/2) {
+      feedback = 'early'; // During the ready period, do not spend the first beat.
+    } else if (b.mark === 'hit' || b.mark === 'early') {
+      return; // One judged attempt in each beat slot.
+    } else if (delta < -WINDOW-EPSILON) {
+      b.mark = feedback = 'early';
+    } else if (delta > WINDOW+EPSILON) {
+      feedback = 'late';
+    } else {
+      b.mark = 'hit'; r.hits++; feedback = 'hit';
+      if (r.bus) tone(r,ctx.currentTime+.008,523.25,659.25,.105,.10,'sine');
+    }
+    r.feedback = feedback; r.feedbackAt = elapsed; r.pose = feedback === 'hit' ? 'hit' : 'miss';
+    renderPlay(r,now-r.zero);
+    if (timing) timing.inputs.push({type:e.type,beat:index+1,inputMs:elapsed,offsetMs:delta,eventDispatchMs:now-stamp,
+      feedbackUpdateMs:performance.now()-stamp,judgment:feedback});
+  }
+  function advance(r, elapsed) {
+    while (r.next < TOTAL && elapsed > r.beats[r.next].at+WINDOW) {
+      const beat = r.beats[r.next++];
+      if (!beat.mark) {
+        beat.mark = 'miss';
+        if (elapsed-r.feedbackAt >= 380) { r.feedback = 'late'; r.feedbackAt = elapsed; r.pose = 'miss'; }
+      }
+    }
+  }
+  function update(r) {
+    if (run !== r) return;
+    const elapsed = performance.now()-r.zero;
+    if (elapsed >= LIMIT) { finish(r,'timeout'); return; }
+    advance(r,elapsed);
+    if (elapsed > r.beats[TOTAL-1].at + Math.max(WINDOW,r.profile.flash)) { finish(r,'beats'); return; }
+    renderPlay(r,elapsed);
+  }
+  function tick(r) { update(r); if (run === r) r.raf = requestAnimationFrame(() => tick(r)); }
+  function put(id,s) { const el = $(id); if (el.textContent !== s) el.textContent = s; }
+  function renderPlay(r,elapsed) {
+    const next = Math.min(r.next,TOTAL-1), b = r.beats[next], delta = elapsed-b.at;
+    const cueIndex = Math.floor((elapsed-LEAD)/r.profile.period), activeBeat = r.beats[cueIndex];
+    const cue = Boolean(activeBeat && elapsed-activeBeat.at < r.profile.flash);
+    const left = Math.max(0,Math.ceil((LIMIT-elapsed)/1000));
+    put('time-left',`${Math.floor(left/60)}:${String(left%60).padStart(2,'0')}`);
+    const displayIndex = cue ? cueIndex : next;
+    put('next-beat',tr('next')(displayIndex+1,TOTAL));
+    put('cue-word',cue ? tr('now') : next === 0 && -delta > Math.max(690,r.profile.hint) ? tr('ready') : tr('soon'));
+    $('cue-word').dataset.cue = $('stage-cue').dataset.cue = cue ? 'now' : 'off';
+    $('track').hidden = !r.profile.hint;
+    if (r.profile.hint) $('track-dot').style.left = `${100 * Math.max(0,Math.min(1,1+delta/r.profile.hint))}%`;
+    [...$('beat-grid').children].forEach((cell,i) => {
+      const mark = r.beats[i].mark;
+      const stamp = mark === 'early' ? 'miss' : mark;
+      if (cell.dataset.mark !== stamp) cell.dataset.mark = stamp;
+      const current = String(i === displayIndex);
+      if (cell.dataset.current !== current) cell.dataset.current = current;
+      const label = mark === 'hit' ? '✓' : mark ? '×' : String(i+1);
+      if (cell.textContent !== label) cell.textContent = label;
+    });
+    const recent = elapsed-r.feedbackAt < 490;
+    put('feedback',tr(recent ? r.feedback : 'wait'));
+    $('feedback').dataset.tone = recent && r.feedback !== 'hit' ? 'miss' : 'plain';
+    put('live-score',tr('points')(r.hits*10));
+    tap.dataset.down = String(recent && r.pose === 'hit' && elapsed-r.feedbackAt < 135);
+    paintScene(recent ? r.pose : 'idle',r.hits,cue);
+    if (timing && cue && !activeBeat.shown) {
+      activeBeat.shown = true;
+      const visualUpdateMs = performance.now()-r.zero;
+      timing.cues.push({beat:cueIndex+1,targetMs:activeBeat.at,visualUpdateMs,visualOffsetMs:visualUpdateMs-activeBeat.at});
+    }
+  }
+  function finish(r,reason) {
+    if (run !== r) return;
+    r.input.abort(); clearTimeout(r.alarm); cancelAnimationFrame(r.raf); stopAudio(r); run = null;
+    if (timing) timing.end = {reason,hits:r.hits,elapsedMs:performance.now()-r.zero};
+    if (reason === 'leave') { show('title',false); paintScene('idle'); return; }
+    const won = r.hits >= GOAL;
+    put('result-heading',tr(won ? 'win' : reason === 'timeout' ? 'timeout' : 'tryAgain'));
+    put('result-copy',tr(reason === 'timeout' ? 'timeCopy' : won ? 'winCopy' : 'missCopy').replace('{n}',String(GOAL-r.hits)));
+    put('final-score',String(r.hits*10)); put('final-hits',String(r.hits));
+    show('result'); paintScene(won ? 'win' : 'miss',r.hits);
+  }
+
+  // Pixel artwork: a cached backdrop and a small set of hand placed pixel shapes.
+  const scene = $('scene').getContext('2d');
+  const backdrop = document.createElement('canvas'); backdrop.width = 320; backdrop.height = 204;
+  const bg = backdrop.getContext('2d');
+  const rect = (c,color,x,y,w,h) => { c.fillStyle=color; c.fillRect(x,y,w,h); };
+  function shape(c,color,points) {
+    // Scanline fill preserves hard pixel edges even on diagonals.
+    for (let y=Math.min(...points.map(p=>p[1]));y<Math.max(...points.map(p=>p[1]));y++) {
+      const edges=[];
+      for (let i=0;i<points.length;i++) {
+        const [x1,y1]=points[i], [x2,y2]=points[(i+1)%points.length];
+        if ((y1<=y && y2>y) || (y2<=y && y1>y)) edges.push(Math.round(x1+(y-y1)*(x2-x1)/(y2-y1)));
+      }
+      edges.sort((a,b)=>a-b);
+      for(let i=0;i<edges.length;i+=2) rect(c,color,edges[i],y,edges[i+1]-edges[i],1);
+    }
+  }
+  function cloud(x,y,w) {
+    rect(bg,'#47776b',x+7,y-4,w-20,3); rect(bg,'#47776b',x,y-1,w,4);
+    rect(bg,'#5b8876',x+15,y-2,w-19,2); rect(bg,'#375f58',x+2,y+3,w-9,2);
+  }
+  function tree(x,y,w,h) {
+    shape(bg,'#183a36',[[x,y],[x+10,y],[x+10,y-6],[x+w-9,y-6],[x+w-9,y],[x+w,y],[x+w,y+h],[x,y+h]]);
+    rect(bg,'#255347',x+5,y+1,w-13,7); rect(bg,'#255347',x+11,y-4,w-22,8);
+    rect(bg,'#376653',x+9,y+2,5,3); rect(bg,'#376653',x+w-19,y-2,7,3);
+  }
+  function stall(x,y,w,flip) {
+    rect(bg,'#7a5d48',x-3,y+27,w+7,4);
+    rect(bg,'#203f37',x+2,y+1,w-4,27);
+    rect(bg,'#3e483a',x+6,y+5,w-12,18);
+    rect(bg,'#e9ae64',x+9,y+6,w-18,12);
+    rect(bg,'#ffd787',x+10,y+7,w-21,2);
+    for(let i=11;i<w-8;i+=8) { rect(bg,flip?'#bb5f49':'#8b724c',x+i,y+13,6,5); rect(bg,'#f9e7a5',x+i+1,y+12,4,2); }
+    rect(bg,'#945c48',x+3,y+20,w-6,8); rect(bg,'#ce9362',x+3,y+20,w-6,2);
+    shape(bg,flip?'#496954':'#934d3e',[[x+7,y-12],[x+w-7,y-12],[x+w,y+2],[x,y+2]]);
+    for(let i=0;i<5;i++) if((i%2)===0) {
+      const edge=x+Math.floor(i*w/5), step=Math.floor(w/5);
+      shape(bg,flip?'#b5c58a':'#eea96c',[[edge+6-i*2,y-10],[edge+step+5-i*2,y-10],[edge+step,y+3],[edge,y+3]]);
+    }
+    rect(bg,'#223c32',x,y+2,w,2);
+  }
+  function lantern(x,y,cream) {
+    rect(bg,'#284839',x-2,y-4,5,4);
+    rect(bg,'#864e3e',x-6,y,13,12);
+    rect(bg,cream?'#d9a55f':'#c1674e',x-5,y-1,11,14);
+    rect(bg,cream?'#ffda91':'#ffb579',x-4,y,9,11);
+    rect(bg,cream?'#f8ebad':'#ffcd8a',x-1,y+1,3,9);
+    rect(bg,'#624d3c',x-3,y+12,7,2); rect(bg,'#f7c27c',x,y+14,2,3);
+  }
+  function makeBackdrop() {
+    rect(bg,'#254d48',0,0,320,204);
+    rect(bg,'#2e5d54',0,35,320,64); rect(bg,'#37675b',0,57,320,42); rect(bg,'#427065',0,72,320,34);
+    rect(bg,'#4b7b6a',0,88,320,20);
+    // Setting sun, a few blocks of cloud, and the silhouettes around the plaza.
+    shape(bg,'#c4ad72',[[146,30],[174,30],[182,38],[182,62],[175,70],[145,70],[138,62],[138,38]]);
+    rect(bg,'#ddbd7e',145,38,30,21); rect(bg,'#e9ca87',150,33,20,33);
+    rect(bg,'#547763',135,58,50,3); rect(bg,'#547763',141,64,41,2);
+    cloud(16,42,60); cloud(65,69,50); cloud(212,41,78); cloud(243,65,47); cloud(98,25,31);
+    for(const [x,y] of [[19,21],[74,19],[109,53],[196,21],[235,29],[283,17],[301,47],[51,56]]) rect(bg,'#9ab18c',x,y,2,2);
+    shape(bg,'#30554a',[[0,78],[24,70],[51,85],[82,72],[115,95],[132,87],[169,98],[206,83],[226,73],[247,84],[279,69],[320,85],[320,118],[0,118]]);
+    tree(0,82,32,39); tree(53,91,37,32); tree(78,97,37,26); tree(115,102,32,21); tree(166,100,34,26); tree(198,92,39,29); tree(231,89,36,33); tree(286,79,34,42);
+    rect(bg,'#9a7757',0,121,320,83); rect(bg,'#aa8560',0,124,320,80); rect(bg,'#bd956a',0,151,320,53);
+    rect(bg,'#c59d70',0,178,320,26);
+    for(let i=-5;i<=5;i++) shape(bg,'#a7805d',[[159+i*15,122],[161+i*15,122],[162+i*42,204],[158+i*42,204]]);
+    for(const [y,h] of [[129,1],[139,1],[153,2],[175,2],[199,3]]) rect(bg,'#a7805d',0,y,320,h);
+    for(let i=0;i<135;i++) {
+      const x=(i*117+7)%320,y=127+((i*i*19+i*7)%74);
+      rect(bg,i%3?'#ccaa7f':'#9d7858',x,y,i%3+1,1);
+    }
+    stall(8,107,57,false); stall(256,107,56,true);
+    for(let x=0;x<320;x++) {
+      const y=Math.round(9+17*(1-((x-160)/160)**2));
+      rect(bg,'#142f2e',x,y,1,2);
+    }
+    for(let i=0;i<8;i++) {
+      const x=21+i*40, y=Math.round(9+17*(1-((x-160)/160)**2));
+      lantern(x,y+4,i%2===0);
+    }
+    rect(bg,'#704f3f',25,126,2,39); rect(bg,'#704f3f',292,126,2,39);
+    for(const x of [12,302]) {
+      rect(bg,'#e7ae6c',x,153,6,6); rect(bg,'#543d32',x-1,159,8,2); rect(bg,'#543d32',x+2,161,2,6);
+    }
+  }
+  function paperFlag(c,x,y,diamond,small=false) {
+    const w=small?13:27,h=small?9:16, edge='#223b30';
+    shape(c,edge,[[x-1,y-1],[x+w+1,y-1],[x+w-3,y+Math.floor(h/2)],[x+w+1,y+h+1],[x-1,y+h+1]]);
+    shape(c,diamond?'#ddeb98':'#f7b171',[[x,y],[x+w-1,y],[x+w-5,y+Math.floor(h/2)],[x+w-1,y+h],[x,y+h]]);
+    rect(c,diamond?'#f1f4b2':'#ffd493',x+1,y+1,w-5,1);
+    const px=x+(small?4:9), py=y+(small?4:8), d=small?2:4;
+    if(diamond) shape(c,edge,[[px,py-d],[px+d+1,py],[px,py+d+1],[px-d-1,py]]);
+    else for (let row=-d;row<=d;row++) {
+      const reach = d - (Math.abs(row)===d ? Math.ceil(d/2) : Math.abs(row)===d-1 && d>2 ? 1 : 0);
+      if (Math.abs(row)===d) rect(c,edge,px-reach,py+row,reach*2+1,1);
+      else { rect(c,edge,px-reach,py+row,1,1); rect(c,edge,px+reach,py+row,1,1); }
+    }
+  }
+  function kid(pose,diamond) {
+    const ink='#26382d',skin='#f5bc80',shadow='#d38963',hair='#523d34',shirt='#4b8575',light='#81ac8d';
+    const win=pose==='win', up=pose==='hit'||win, shy=pose==='miss', y=shy?3:up?-3:0;
+    const r=(color,x,py,w,h)=>rect(scene,color,x,py+y,w,h);
+    const poly=(color,points)=>shape(scene,color,points.map(([x,py])=>[x,py+y]));
+    shape(scene,'#916d53',[[132,174],[145,169],[181,169],[196,174],[188,180],[140,180]]);
+    // The boots stay on the pavement while the torso changes pose.
+    shape(scene,ink,[[146,146],[176,146],[178,171],[185,171],[185,177],[167,177],[163,157],[158,157],[155,176],[137,176],[137,171],[144,169]]);
+    rect(scene,'#566451',148,149,9,19); rect(scene,'#677360',168,149,7,21);
+    rect(scene,'#e0c58b',139,172,13,3); rect(scene,'#e0c58b',170,173,13,3);
+    poly(ink,[[146,119],[175,119],[182,130],[178,153],[144,153],[141,133]]);
+    poly(shirt,[[147,122],[173,122],[179,130],[175,150],[147,150],[144,132]]);
+    r(light,149,125,9,3); r('#346555',165,135,10,13); r('#ddeb98',157,131,6,15);
+    r('#f8e3a4',158,136,4,4); r(ink,146,149,30,3);
+    poly(ink,win?[[146,123],[141,124],[133,115],[127,117],[130,125],[140,139],[146,138]]:[[146,124],[140,124],[134,137],[135,148],[143,148],[146,139]]);
+    if(win) { r(skin,129,116,6,6); r(shirt,136,125,9,8); }
+    else { r(shirt,138,132,6,8); r(skin,137,140,6,6); }
+    poly(ink,up?[[172,124],[181,125],[188,114],[195,113],[200,120],[187,138],[178,139]]:[[172,124],[181,124],[191,132],[198,131],[201,138],[190,145],[178,138]]);
+    if(up) { r(shirt,178,127,10,7); r(skin,190,115,7,6); }
+    else { r(shirt,177,128,9,8); r(skin,192,134,7,6); }
+    r('#6d4937',195,up?92:119,3,up?28:32); r('#e4c181',195,up?92:119,1,up?28:32);
+    paperFlag(scene,197,(up?91:118)+y,diamond);
+    poly(ink,[[148,88],[172,88],[180,96],[180,114],[175,123],[147,123],[141,115],[141,98]]);
+    poly(hair,[[149,90],[171,90],[178,97],[178,109],[143,109],[143,98]]);
+    r('#7a5240',148,93,23,3); r('#956449',149,94,12,2);
+    poly(skin,[[147,103],[153,103],[153,100],[172,100],[172,104],[177,104],[177,114],[173,120],[149,120],[145,114],[145,107],[147,107]]);
+    r('#eb9169',148,113,4,2); r('#eb9169',171,113,4,2); r(shadow,154,119,15,2);
+    if(win){ r(ink,151,108,4,2); r(ink,169,108,4,2); r(ink,158,113,8,4); r('#ffdb9a',160,113,4,1); }
+    else if(up){ r(ink,152,107,2,3); r(ink,170,107,2,3); r(ink,158,115,7,2); }
+    else if(shy){ r(ink,151,110,4,1); r(ink,169,110,4,1); r(ink,160,116,4,1); }
+    else { r(ink,152,107,2,4); r(ink,170,107,2,4); r(ink,160,115,5,1); }
+    r('#ebe4a2',143,99,6,3); r('#b9c680',142,98,3,5);
+  }
+  let drawn = '';
+  function paintScene(pose,hits=null,cue=false) {
+    const flags = hits===null ? [2,6,9,13] : Array.from({length:hits},(_,i)=>i);
+    const key = `${pose}:${hits}:${cue}`;
+    if (drawn===key) return;
+    drawn=key;
+    scene.drawImage(backdrop,0,0);
+    for(let i=0;i<16;i++) {
+      const side = i<8?0:1, x = (side?185:32)+(i%8)*13, y = 77+(3-Math.abs(3-(i%8)))*2;
+      rect(scene,'#557c61',x,y,13,1);
+      const position=flags.indexOf(i);
+      if(position!==-1) paperFlag(scene,x,y+2,Boolean(position%2),true);
+    }
+    kid(pose,Boolean(Math.max(0,(hits??0)-(pose==='hit'||pose==='win'?1:0))%2));
+    if(cue||pose==='win') {
+      for(const [x,y] of [[130,94],[192,75],[229,117]]) {
+        rect(scene,'#fff1b8',x-1,y-4,2,8); rect(scene,'#fff1b8',x-4,y-1,8,2);
+      }
+    }
+  }
+  for (let i=0;i<TOTAL;i++) $('beat-grid').append(document.createElement('span'));
+  makeBackdrop(); translate(); show('title',false); paintScene('idle');
+  </script>
+  <!--
+    起動と検証（2026-11-04）
+    ・オフライン: ネット接続を切り、PCのブラウザでこの index.html を直接開く。
+    ・静的配信: 同じ1ファイルを配信先の任意のフォルダーに置く。
+      ローカル再現例: examples のあるディレクトリで `python -m http.server 8000 --bind 127.0.0.1`
+      を実行し、http://127.0.0.1:8000/examples/festival/index.html を開く。
+
+    手動の確認手順
+    1. 日本語とENを切り替え、タイトルから遊び方へ。しばらく待ち、スタート後に1:00から
+       計測が始まることを確認する。矢印でメニューや難易度を選び、EnterまたはSpaceで進む。
+    2. ふつうで「いま！」に合わせて旗ボタンを押す。ぴったりなら10点。合図の直前・直後に
+       ずらして押し、「はやい」「おそい」と表示されることも確認する。12拍で120点・成功、
+       最大160点。通常は最終拍の判定後（ふつうは開始から約18秒）に終わる。
+    3. リザルトの「もう一度」で点数・旗・残り時間が初期化されること、タイトルにも戻れる
+       ことを確認する。無音にし、スマートフォン幅で「いま！」とタップだけで同じ操作を試す。
+       かんたんは合図の表示と予告が長く、むずかしいは予告の目盛りがなく速い。
+    4. 60秒分の中断を再現するには、Chrome/Edgeの開発者ツールで開始直後に次を一度実行する。
+       { const saved = performance.now; const shifted = saved.bind(performance);
+         try { performance.now = () => shifted() + 60001;
+               document.dispatchEvent(new Event('visibilitychange')); }
+         finally { performance.now = saved; } }
+       直ちに「時間切れ」が表示され、再試行で1:00から始まれば合格。
+
+    確認済み: Windows上のChrome 156.0.8078.80（PC操作、サブディレクトリでのHTTP配信、
+    日英、Web Audioの予約、±180msの境界、成功、再試行、仮想時計による60秒の時間切れ）、
+    Edge 156.0.4314.58（320×568のタッチエミュレーション、オフライン file://、無音、未達成、
+    かんたん・むずかしい）。いずれもヘッドレス。文書以外のリクエストは発生しなかった。
+
+    会場の端末で残る確認: スマートフォン実機、音と画面のずれ、物理入力の遅延、英語の表現。
+    端末・OS・ブラウザ版・音の出力先を記録し、ミュート状態と音を出す状態で1回ずつ試す。
+    URL末尾に #timing を付けて再読み込みすると、終了後にコンソールで
+    `console.table(festivalTiming.cues)` と `console.table(festivalTiming.inputs)` を確認できる。
+    visualOffsetMs は予定拍から画面更新処理まで、eventDispatchMs はイベント時刻から処理開始
+    まで、feedbackUpdateMs はイベント時刻から判定表示の更新処理まで。いずれもブラウザ内の値。
+    物理遅延は別のカメラ（120または240fps）でキー/指と画面を一緒に撮り、入力から画面が
+    反応するまでのフレーム数×1000÷fpsを10回ほど記録する。音を使う場合はスピーカーの
+    拍子木と「いま！」のずれも録画で確認する。計測用の値はページ内のメモリーにのみ残る。
+  -->
+</body>
+</html>
