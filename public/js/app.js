@@ -4,6 +4,7 @@ import { steps } from './steps.js';
 import { draftLimit, jsonLimit, newProjectId, packProject, parseProject, projectLink, readProjectLink, storageKey } from './storage.js';
 import { inspect } from './quality.js';
 import { markdownPreview } from './markdown-preview.js';
+import { getLanguage, initLanguage, localizeUI, t } from './i18n.js';
 
 const workspace = document.querySelector('#workspace');
 const announcement = document.querySelector('#announcement');
@@ -20,6 +21,8 @@ let target = 'generic';
 let saveTimer;
 let sharedProject;
 let openMessage = '';
+let pageMode = 'home';
+let resultOptions = {};
 const storageNotice = document.querySelector('#storage-notice');
 
 function snapshot() {
@@ -32,7 +35,7 @@ function persist() {
     localStorage.setItem(storageKey, JSON.stringify(packProject(snapshot())));
     storageNotice.textContent = '';
   } catch {
-    storageNotice.textContent = 'ブラウザーに保存できませんでした。設定JSONを保存してください。';
+    storageNotice.textContent = t('ブラウザーに保存できませんでした。設定JSONを保存してください。');
   }
 }
 
@@ -54,7 +57,7 @@ function resume() {
 }
 
 function replaceState(state) {
-  if (project && !window.confirm('現在の作業を、読み込んだ企画に置き換えますか？')) return;
+  if (project && !window.confirm(t('現在の作業を、読み込んだ企画に置き換えますか？'))) return;
   loadState(state);
   if (location.hash.startsWith('#project=')) history.replaceState(null, '', location.pathname + location.search);
   sharedProject = undefined;
@@ -65,7 +68,14 @@ function replaceState(state) {
 function node(tag, className, text) {
   const element = document.createElement(tag);
   if (className) element.className = className;
-  if (text !== undefined) element.textContent = text;
+  if (text !== undefined) element.textContent = t(text);
+  return element;
+}
+
+function userNode(tag, className, text) {
+  const element = node(tag, className);
+  element.dataset.userContent = '';
+  element.textContent = text;
   return element;
 }
 
@@ -77,6 +87,7 @@ function button(text, className, action) {
 }
 
 function show(content, focus = true) {
+  localizeUI(content);
   workspace.replaceChildren(content);
   const heading = workspace.querySelector('h1');
   if (focus && heading) {
@@ -87,7 +98,7 @@ function show(content, focus = true) {
 }
 
 function start(topicId) {
-  if (project && !window.confirm('作業中の入力を破棄して、新しい企画を始めますか？')) return;
+  if (project && !window.confirm(t('作業中の入力を破棄して、新しい企画を始めますか？'))) return;
   project = newProject(topicId);
   step = 0;
   editing = false;
@@ -96,11 +107,12 @@ function start(topicId) {
   drafts = {};
   kind = 'integrated';
   target = 'generic';
-  if (topicId) project.projectTitle = topics.find(({ id }) => id === topicId).name;
+  if (topicId) project.projectTitle = t(topics.find(({ id }) => id === topicId).name);
   renderWizard();
 }
 
 function renderHome(focus = true) {
+  pageMode = 'home';
   const page = node('div', 'home');
   page.innerHTML = `
     <section class="hero" aria-labelledby="hero-title">
@@ -146,7 +158,7 @@ function renderHome(focus = true) {
     try {
       if (file.size > jsonLimit) throw new Error('設定JSONは8 MB以内にしてください。');
       replaceState(parseProject(await file.text()));
-    } catch (error) { homeStatus.textContent = `Q-015 ${error.message}`; }
+    } catch (error) { homeStatus.textContent = t(`Q-015 ${t(error.message)}`); }
   });
   const manage = node('div', 'project-actions');
   manage.append(button('設定JSONを読み込む', 'button secondary', () => importInput.click()), importInput);
@@ -203,10 +215,10 @@ function renderField(field) {
     label.htmlFor = control.id;
     if (control instanceof HTMLInputElement) control.type = field.type;
     if (field.items) {
-      for (const [value, text] of Object.entries(field.items)) control.add(new Option(text, value));
+      for (const [value, text] of Object.entries(field.items)) control.add(new Option(t(text), value));
     }
     if (field.required) control.required = true;
-    if (field.placeholder) control.placeholder = field.placeholder;
+    if (field.placeholder) control.placeholder = t(field.placeholder);
     if (field.type === 'number') {
       control.min = field.min;
       control.max = field.max;
@@ -247,21 +259,21 @@ function renderField(field) {
 }
 
 function renderReview() {
-  const choice = (key) => choices[key][project[key]];
-  const group = (key) => project[key].map((id) => choices[key][id]).join('・');
+  const choice = (key) => t(choices[key][project[key]]);
+  const group = (key) => project[key].map((id) => t(choices[key][id])).join(getLanguage() === 'en' ? ', ' : '・');
   const rec = recommend(project);
   const source = project.sourceType === 'verified'
     ? `${project.sourceTitle}\n${project.sourceUrl}\n${project.verifiedAt} · ${project.applicability}` : '';
   const summaries = [
     [project.projectTitle, choice('objective')],
-    [topics.find(({ id }) => id === project.topicId)?.name ?? '自由記述', choice('sourceType'), source, topicStory(project)],
+    [t(topics.find(({ id }) => id === project.topicId)?.name ?? '自由記述'), choice('sourceType'), source, topicStory(project, getLanguage())],
     [choice('age'), choice('mode'), project.mode === 'solo' ? '' : choice('cooperation')],
-    [genres.find(({ id }) => id === project.genreId)?.name ?? project.genreCustom, project.genreId === 'rhythm' ? choice('rhythmTiming') : '',
-      `${project.playSeconds || rec.seconds}秒（${project.playSeconds ? '手動' : '推奨'}）`,
-      `${choices.difficulty[project.difficulty || rec.difficulty]}（${project.difficulty ? '手動' : '推奨'}）`, group('accessibility')],
+    [t(genres.find(({ id }) => id === project.genreId)?.name) ?? project.genreCustom, project.genreId === 'rhythm' ? choice('rhythmTiming') : '',
+      t(`${project.playSeconds || rec.seconds}秒（${project.playSeconds ? '手動' : '推奨'}）`),
+      t(`${choices.difficulty[project.difficulty || rec.difficulty]}（${project.difficulty ? '手動' : '推奨'}）`), group('accessibility')],
     [group('platforms'), group('controls'), group('languages')],
     [project.visual === 'custom' ? project.styleNotes : choice('visual'), choice('audio'), choice('assetStrategy'), project.assetStrategy === 'procedural' ? '' : project.assetNotes],
-    [choice('fileLayout'), project.techStack === 'auto' ? `${choices.techStack[rec.techStack]}（推奨）` : project.techStack === 'custom' ? project.techCustom : choice('techStack'), choice('offlineMode')],
+    [choice('fileLayout'), project.techStack === 'auto' ? t(`${choices.techStack[rec.techStack]}（推奨）`) : project.techStack === 'custom' ? project.techCustom : choice('techStack'), choice('offlineMode')],
   ];
   const list = node('dl', 'review');
   summaries.forEach((values, index) => {
@@ -271,8 +283,8 @@ function renderReview() {
       step = index;
       renderWizard();
     });
-    edit.setAttribute('aria-label', `${steps[index].name}の設定を変更`);
-    entry.append(node('dt', '', steps[index].name), node('dd', '', values.filter(Boolean).join('\n')), edit);
+    edit.setAttribute('aria-label', t(`${steps[index].name}の設定を変更`));
+    entry.append(node('dt', '', steps[index].name), userNode('dd', '', values.filter(Boolean).join('\n')), edit);
     list.append(entry);
   });
   return list;
@@ -281,7 +293,7 @@ function renderReview() {
 function showIssues(issues) {
   const error = document.querySelector('#errors');
   error.hidden = false;
-  error.textContent = issues.map(({ message }) => message).join('\n');
+  error.textContent = issues.map(({ message }) => t(message)).join('\n');
   const first = document.getElementById(issues[0].field) ?? document.querySelector(`#field-${issues[0].field} input`);
   if (first) {
     first.setAttribute('aria-invalid', 'true');
@@ -292,6 +304,7 @@ function showIssues(issues) {
 }
 
 function renderWizard(focus = true) {
+  pageMode = 'wizard';
   screen = 'wizard';
   scheduleSave();
   const current = steps[step];
@@ -354,8 +367,8 @@ function renderWizard(focus = true) {
     }
     if (step === lastStep) {
       const stale = Object.keys(drafts).filter((key) => {
-        const [variant, adapter] = key.split(':');
-        return drafts[key].generatedMarkdown !== generateOutput(project, variant, adapter, projectId);
+        const [variant, adapter, locale = 'ja'] = key.split(':');
+        return drafts[key].generatedMarkdown !== generateOutput(project, variant, adapter, projectId, locale);
       });
       if (stale.length) confirmRegenerate(stale);
       else renderResult();
@@ -386,7 +399,7 @@ function download(content, extension, suffix, type) {
 
 function exportProject() {
   download(JSON.stringify(packProject(snapshot()), null, 2), 'json', 'project', 'application/json');
-  announcement.textContent = '設定JSONのダウンロードを開始しました。';
+  announcement.textContent = t('設定JSONのダウンロードを開始しました。');
 }
 
 function confirmRegenerate(keys) {
@@ -413,7 +426,7 @@ function resultSelect(labelText, key, items, value, onChange) {
   const select = node('select');
   select.id = key;
   label.htmlFor = key;
-  for (const [id, name] of Object.entries(items)) select.add(new Option(name, id));
+  for (const [id, name] of Object.entries(items)) select.add(new Option(t(name), id));
   select.value = value;
   select.addEventListener('change', () => {
     onChange(select.value);
@@ -424,10 +437,12 @@ function resultSelect(labelText, key, items, value, onChange) {
 }
 
 function renderResult({ view = 'raw', version } = {}, focus = true) {
+  pageMode = 'result';
+  resultOptions = { view, version };
   screen = 'result';
-  const key = `${kind}:${target}`;
+  const key = `${kind}:${target}${getLanguage() === 'en' ? ':en' : ''}`;
   const draft = drafts[key];
-  const original = generateOutput(project, kind, target, projectId);
+  const original = generateOutput(project, kind, target, projectId, getLanguage());
   version ??= draft ? 'edited' : 'original';
   const current = () => version === 'edited' ? drafts[key]?.editedMarkdown ?? original : original;
   scheduleSave();
@@ -453,13 +468,14 @@ function renderResult({ view = 'raw', version } = {}, focus = true) {
       drafts[key] = { generatedMarkdown: draft?.generatedMarkdown ?? original, editedMarkdown: preview.value };
       scheduleSave();
       staleNotice.hidden = false;
-      qualitySummary.textContent = '品質チェック · 未検査';
+      qualitySummary.textContent = t('品質チェック · 未検査');
       qualityBody.replaceChildren(node('p', 'hint', '編集後の内容を検査してください。'));
     });
   } else if (view === 'preview') preview = markdownPreview(current());
-  else preview = node('pre', 'preview', current());
+  else preview = userNode('pre', 'preview', current());
+  preview.dataset.userContent = '';
   preview.tabIndex = 0;
-  preview.setAttribute('aria-label', 'Markdownの全文');
+  preview.setAttribute('aria-label', t('Markdownの全文'));
   const status = node('p', 'hint copy-status', 'コピーまたは保存して、制作に使うAIに渡してください。');
   status.setAttribute('role', 'status');
   const staleNotice = node('p', 'hint', draft && draft.generatedMarkdown !== original
@@ -469,7 +485,7 @@ function renderResult({ view = 'raw', version } = {}, focus = true) {
   actions.append(button('全文をコピー', 'button primary', async () => {
     try {
       await navigator.clipboard.writeText(current());
-      status.textContent = 'Markdownをクリップボードにコピーしました。';
+      status.textContent = t('Markdownをクリップボードにコピーしました。');
     } catch {
       let selectable = preview;
       let feedback = status;
@@ -486,11 +502,11 @@ function renderResult({ view = 'raw', version } = {}, focus = true) {
         selection.removeAllRanges();
         selection.addRange(range);
       }
-      feedback.textContent = '自動コピーが使えないため、全文を選択しました。端末のコピー操作かファイル保存を使ってください。';
+      feedback.textContent = t('自動コピーが使えないため、全文を選択しました。端末のコピー操作かファイル保存を使ってください。');
     }
   }), button('↓ Markdownを保存', 'button secondary', () => {
     download(current(), 'md', `${kind}${target === 'generic' ? '' : `_${target}`}${version === 'edited' ? '_edited' : ''}`, 'text/markdown');
-    announcement.textContent = 'Markdownのダウンロードを開始しました。';
+    announcement.textContent = t('Markdownのダウンロードを開始しました。');
   }), button('設定JSONを保存', 'button secondary', exportProject));
   const editorActions = node('div', 'result-actions');
   editorActions.append(button('Markdown原文', 'button secondary', () => renderResult({ version }, false)),
@@ -503,17 +519,17 @@ function renderResult({ view = 'raw', version } = {}, focus = true) {
   const qualitySummary = node('summary', '', '品質チェック');
   const qualityBody = node('div', 'quality-body');
   const scan = () => {
-    const findings = inspect(project, current(), kind, target, projectId);
+    const findings = inspect(project, current(), kind, target, projectId, getLanguage());
     const errors = findings.filter(({ status }) => status === 'error').length;
     const warnings = findings.filter(({ status }) => status === 'warning').length;
-    qualitySummary.textContent = `品質チェック · エラー ${errors} / 要確認 ${warnings}`;
+    qualitySummary.textContent = t(`品質チェック · エラー ${errors} / 要確認 ${warnings}`);
     quality.open = errors > 0 || quality.open;
     const list = node('ul', 'quality-list');
     const sorted = [...findings].sort((a, b) => ['error', 'warning', 'pass'].indexOf(a.status) - ['error', 'warning', 'pass'].indexOf(b.status));
     for (const finding of sorted) {
       const item = node('li', finding.status);
       const label = { pass: '検出なし', warning: '要確認', error: 'エラー' }[finding.status];
-      item.append(node('strong', '', `${finding.id} ${finding.subject} · ${label}`), node('p', '', `${finding.reason} ${finding.fix}`.trim()));
+      item.append(node('strong', '', `${finding.id} ${t(finding.subject)} · ${t(label)}`), node('p', '', `${t(finding.reason)} ${t(finding.fix)}`.trim()));
       list.append(item);
     }
     qualityBody.replaceChildren(list);
@@ -533,7 +549,7 @@ function renderResult({ view = 'raw', version } = {}, focus = true) {
   const shareActions = node('div', 'result-actions');
   const shareMenu = navigator.share ? button('端末の共有メニュー', 'button secondary', async () => {
     try { await navigator.share({ title: project.projectTitle, url: link.value }); }
-    catch (error) { if (error.name !== 'AbortError') sharingStatus.textContent = error.message; }
+    catch (error) { if (error.name !== 'AbortError') sharingStatus.textContent = t(error.message); }
   }) : null;
   shareActions.append(button('共有URLを作成', 'button secondary', async () => {
     try {
@@ -542,9 +558,9 @@ function renderResult({ view = 'raw', version } = {}, focus = true) {
       if (shareMenu) shareMenu.disabled = false;
       try {
         await navigator.clipboard.writeText(link.value);
-        sharingStatus.textContent = '設定の共有URLをコピーしました。';
-      } catch { link.select(); sharingStatus.textContent = '選択したURLを端末のコピー操作で共有できます。'; }
-    } catch (error) { sharingStatus.textContent = error.message; }
+        sharingStatus.textContent = t('設定の共有URLをコピーしました。');
+      } catch { link.select(); sharingStatus.textContent = t('選択したURLを端末のコピー操作で共有できます。'); }
+    } catch (error) { sharingStatus.textContent = t(error.message); }
   }));
   if (shareMenu) {
     shareMenu.disabled = true;
@@ -552,8 +568,8 @@ function renderResult({ view = 'raw', version } = {}, focus = true) {
   }
   sharing.append(node('summary', '', '設定を共有する'), sharingStatus, shareActions, link);
   const bar = node('div', 'preview-bar');
-  bar.append(node('span', '', `${outputs[kind].label} / ${targets[target]}`), node('span', '', version === 'edited' ? '編集版' : kind === 'integrated' ? `生成原文 · ${sections.length} セクション` : '生成原文'));
-  panel.append(node('p', 'eyebrow', 'OUTPUT / READY'), title, node('p', 'intro', project.projectTitle.trim()),
+  bar.append(node('span', '', `${t(outputs[kind].label)} / ${t(targets[target])}`), node('span', '', version === 'edited' ? '編集版' : kind === 'integrated' ? `生成原文 · ${sections.length} セクション` : '生成原文'));
+  panel.append(node('p', 'eyebrow', 'OUTPUT / READY'), title, userNode('p', 'intro', project.projectTitle.trim()),
     selectors, actions, status, editorActions, staleNotice, bar, preview, quality, sharing, button('← 設定確認へ', 'button secondary result-back', () => {
       step = lastStep;
       renderWizard();
@@ -562,6 +578,12 @@ function renderResult({ view = 'raw', version } = {}, focus = true) {
 }
 
 document.querySelector('#home').addEventListener('click', () => renderHome());
+initLanguage();
+document.addEventListener('languagechange', () => {
+  if (pageMode === 'result') renderResult(resultOptions, false);
+  else if (pageMode === 'wizard') renderWizard(false);
+  else renderHome(false);
+});
 window.addEventListener('pagehide', persist);
 try {
   const saved = localStorage.getItem(storageKey);

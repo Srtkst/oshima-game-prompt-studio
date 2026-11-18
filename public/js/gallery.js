@@ -1,4 +1,7 @@
-import { isGameSlug, registeredGameUrl } from './game-file.js';
+import { isGameSlug, registeredDescription, registeredGameUrl, registeredTitle } from './game-file.js';
+import { getLanguage, initLanguage, t } from './i18n.js';
+
+initLanguage();
 
 const grid = document.querySelector('#gallery-grid');
 const status = document.querySelector('#gallery-status');
@@ -9,6 +12,7 @@ const normalized = (text) => text.normalize('NFKC').toLocaleLowerCase('ja');
 function textNode(tag, text, className) {
   const element = document.createElement(tag);
   element.textContent = text;
+  element.dataset.userContent = '';
   if (className) element.className = className;
   return element;
 }
@@ -23,9 +27,10 @@ function card(game, index) {
   art.prepend(textNode('span', `GAME ${String(index + 1).padStart(2, '0')}`, 'gallery-index'));
   const copy = document.createElement('div');
   copy.className = 'gallery-copy';
-  copy.append(textNode('h2', game.title));
-  if (game.description) copy.append(textNode('p', game.description, 'hint'));
-  copy.append(textNode('span', game.id, 'gallery-id'), textNode('span', '遊ぶ →', 'gallery-play'));
+  copy.append(textNode('h2', registeredTitle(game.id, game, getLanguage())));
+  const description = registeredDescription(game, getLanguage());
+  if (description) copy.append(textNode('p', description, 'hint'));
+  copy.append(textNode('span', game.id, 'gallery-id'), textNode('span', t('遊ぶ →'), 'gallery-play'));
   link.append(art, copy);
   entry.append(link);
   return entry;
@@ -41,15 +46,16 @@ try {
   function render() {
     const query = normalized(search.value.trim());
     const matching = games.map((game, index) => ({ game, index })).filter(({ game }) =>
-      normalized(`${game.title} ${game.description} ${game.id}`).includes(query));
+      normalized(`${game.title} ${game.description} ${game.titles?.ja ?? ''} ${game.titles?.en ?? ''} ${game.descriptions?.ja ?? ''} ${game.descriptions?.en ?? ''} ${game.id}`).includes(query));
     grid.replaceChildren(...matching.map(({ game, index }) => card(game, index)));
-    status.textContent = games.length === 0 ? '登録済みの作品はまだありません。'
+    status.textContent = t(games.length === 0 ? '登録済みの作品はまだありません。'
       : matching.length === 0 ? '一致する作品がありません。'
-        : query ? `${games.length}件中 ${matching.length}件` : `登録作品 ${games.length}件`;
+        : query ? `${games.length}件中 ${matching.length}件` : `登録作品 ${games.length}件`);
   }
   search.closest('.field').hidden = games.length === 0;
   search.addEventListener('input', render);
+  document.addEventListener('languagechange', render);
   render();
 } catch {
-  status.textContent = '作品一覧を読み込めませんでした。時間をおいて再読み込みしてください。';
+  status.textContent = t('作品一覧を読み込めませんでした。時間をおいて再読み込みしてください。');
 }

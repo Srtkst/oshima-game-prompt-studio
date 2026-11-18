@@ -1,4 +1,4 @@
-// Generated from data/presets.json. Run npm run build after editing the source.
+// Generated from data/presets*.json. Run npm run build after editing the source.
 export const presets = {
   "version": 2,
   "topics": [
@@ -311,4 +311,220 @@ export const presets = {
       "rules": "二つの見本に合う部品を相談して4回配置する。1人の場合は見本を同時に表示。正解で10点。4回達成で成功、時間切れで終了。"
     }
   ]
+};
+export const presetsEnglish = {
+  "topics": {
+    "sorting": {
+      "name": "Sort Together",
+      "category": "Daily life",
+      "description": "Sort toys by color and shape, together.",
+      "story": "Children are putting toys away for a swap in the community room. They return round tops, square blocks and star decorations to boxes marked with matching shapes."
+    },
+    "kit": {
+      "name": "Preparedness Catch",
+      "category": "Preparedness",
+      "description": "Turn festival preparations into a lively catching game.",
+      "story": "At a fictional preparedness festival, children help with preparations by catching star-marked cards showing flashlights and whistles in a tray."
+    },
+    "hello": {
+      "name": "Hello Square",
+      "category": "Connections",
+      "description": "Match gesture cards to bring a courtyard to life.",
+      "story": "A fictional courtyard has cards showing four gestures: waving, bowing, a hand over the heart and smiling. Each time children match a pair, another flag appears in the square."
+    },
+    "lantern": {
+      "name": "A Path of Lights",
+      "category": "Power outages",
+      "description": "Follow a trail of little lights.",
+      "story": "Paper lanterns made at a craft workshop line a square. A child finds pictures of the lanterns in order, gradually lighting a fictional night scene."
+    },
+    "garden": {
+      "name": "Planter Day",
+      "category": "Gardening",
+      "description": "Gather little seedlings.",
+      "story": "Colorful seedlings fill a small courtyard garden. A caterpillar-shaped cart collects seedling cards to create a patterned flower bed."
+    },
+    "bench": {
+      "name": "A Place to Rest",
+      "category": "Shared spaces",
+      "description": "Plan a square together.",
+      "story": "Two players arrange folding benches in a courtyard, keeping them away from the marked paths while making places to rest."
+    },
+    "rain": {
+      "name": "Footsteps after Rain",
+      "category": "Rainy days",
+      "description": "Jump over puddles.",
+      "story": "In a model courtyard after the rain, a character wearing paper boots jumps over puddles and collects pictures of umbrellas."
+    },
+    "notice": {
+      "name": "Noticeboard Detective",
+      "category": "Noticeboards",
+      "description": "Follow clues to find a notice.",
+      "story": "A fictional noticeboard hides star-marked notes for a craft workshop. Use nearby hints to discover their positions."
+    },
+    "library": {
+      "name": "A Picture Book Journey",
+      "category": "Story time",
+      "description": "Collect the pages of a picture book.",
+      "story": "Pages for a story-time picture book have scattered through a paper maze. Gather them and bring them back to the cover."
+    },
+    "workshop": {
+      "name": "Craft Market",
+      "category": "Crafts",
+      "description": "Arrange craft pieces.",
+      "story": "Different paper shapes arrive one at a time at a craft table. Fit them together without gaps to make a decoration."
+    },
+    "festival": {
+      "name": "Festival Beat",
+      "category": "Festivals",
+      "description": "Keep time with the cues.",
+      "story": "At a fictional festival, players wave paper flags to the sound of wooden clappers. Alternating colors brighten the square."
+    },
+    "delivery": {
+      "name": "Sharing Delivery",
+      "category": "Helping out",
+      "description": "Choose a path and deliver little boxes.",
+      "story": "Carry small origami boxes to the reception desk for a community gathering. Choose lanes and deliver the supplies without dropping them."
+    },
+    "repair": {
+      "name": "Bouncing Repair Shop",
+      "category": "Repairs",
+      "description": "Bounce a ball to reveal pictures.",
+      "story": "In a fictional repair workshop, a bouncing ball flips old color samples to reveal pictures of repaired tools."
+    },
+    "water": {
+      "name": "Blue Marks",
+      "category": "Supplies",
+      "description": "Line up the symbols.",
+      "story": "Place droplet and leaf marks to decorate a preparedness festival. A flag rises when three matching marks form a line."
+    },
+    "wind": {
+      "name": "Pinwheel Sky",
+      "category": "Wind",
+      "description": "Send a breeze to paper pinwheels.",
+      "story": "Send round lights representing wind to paper pinwheels drifting above a courtyard. Never aim at people."
+    },
+    "stairs": {
+      "name": "Step Stamps",
+      "category": "Getting around",
+      "description": "Collect stamps on model steps.",
+      "story": "Guide a paper figure up model steps in a community room. Collect shape stamps at the edges and put them on a card."
+    },
+    "language": {
+      "name": "Words and Gestures",
+      "category": "Language exchange",
+      "description": "Connect words and gestures with pictures.",
+      "story": "At a community gathering, cards express gratitude through pictures. Find a shared feeling even when the pictures differ."
+    },
+    "cleanup": {
+      "name": "Three Courtyard Tasks",
+      "category": "Tidying",
+      "description": "Turn cleanup into short games.",
+      "story": "After playing, children put away paper flags, blocks and balls in a courtyard. Each short game asks them to find a different object."
+    },
+    "map": {
+      "name": "Making a Neighborhood Map",
+      "category": "Local exploration",
+      "description": "Reveal a model map.",
+      "story": "A map shows an invented model courtyard. Bounce a stamp to uncover tiles and discover pictures of trees and clocks."
+    },
+    "meet": {
+      "name": "Our Community Flag",
+      "category": "Generations",
+      "description": "Combine color and shape clues.",
+      "story": "Neighbors make a flag for a community gathering. One player sees a shape sample and another sees a color sample. They discuss which pieces to use."
+    }
+  },
+  "genres": {
+    "sorting": {
+      "name": "Sorting puzzle",
+      "actions": "Select an item and its destination",
+      "rules": "Present 12 items, one at a time, from three categories. Choose the matching shape box. Start at 0 points and add 10 per correct answer. A wrong answer shows a brief visual hint and repeats the same item. Complete all 12 for success, or finish when time runs out."
+    },
+    "catch": {
+      "name": "Catching action",
+      "actions": "Move the tray left and right",
+      "rules": "Cards fall down three lanes. The tray starts in the middle. Start at 0 points. Catch a star-marked card for 10 points; other cards give 0. Catch 10 star cards for success, or show the score when time runs out."
+    },
+    "memory": {
+      "name": "Matching pairs",
+      "actions": "Move to and turn over cards",
+      "rules": "Place four pairs of cards face down. Turn over two at a time. Matching pictures give 10 points and one flag. Show mismatches briefly before turning them back. Start at 0 points. Match all four pairs for success, or finish when time runs out."
+    },
+    "platform": {
+      "name": "Side-scrolling action",
+      "actions": "Move left and right and jump",
+      "rules": "Travel through three horizontal sections. Collect an item for 10 points. Touching an obstacle returns the player to the previous platform. Reach the goal after three sections for success, or finish when time runs out."
+    },
+    "runner": {
+      "name": "Lane runner",
+      "actions": "Switch lanes left and right",
+      "rules": "Start in the middle of three lanes and move forward automatically. Target cards give 10 points. Obstacles briefly slow the player. Collect eight cards for success, or finish when time runs out."
+    },
+    "falling": {
+      "name": "Falling-block puzzle",
+      "actions": "Move, rotate and drop",
+      "rules": "Drop pieces on a six-column, ten-row board. A filled row clears for 10 points. Clear five rows for success. End if pieces reach the top or time runs out."
+    },
+    "mines": {
+      "name": "Clue puzzle",
+      "actions": "Reveal cells and place markers",
+      "rules": "Hide four stars on a five-by-five board. Numbers show adjacent stars. Revealing a star gives a gentle hint. Mark all four correctly for success, or finish when time runs out."
+    },
+    "tic": {
+      "name": "Three in a row",
+      "actions": "Place marks in empty cells",
+      "rules": "Take turns placing marks on a three-by-three board. Three matching marks in a row, column or diagonal win. A full board is a draw. Solo players face a simple automated opponent; cooperative players discuss moves for the same side."
+    },
+    "breakout": {
+      "name": "Block breaker",
+      "actions": "Move a paddle left and right",
+      "rules": "Bounce a ball to reveal 12 panels. Each panel gives 10 points. Restart the ball from the center if it falls. End when all panels are revealed or time runs out."
+    },
+    "shooter": {
+      "name": "Moving-target action",
+      "actions": "Move left and right and send light",
+      "rules": "Illuminate moving objects eight times. Each hit gives 10 points. Allow only one light at a time. Eight hits mean success; otherwise end at the time limit. Avoid violence or aiming at people."
+    },
+    "snake": {
+      "name": "Growing collection game",
+      "actions": "Change direction",
+      "rules": "Move automatically on a ten-by-ten board. Each collected item adds one segment. Touching a wall or the trail returns the player to the starting point. End after eight items or when time runs out."
+    },
+    "maze": {
+      "name": "Maze collection",
+      "actions": "Move up, down, left and right",
+      "rules": "Collect six marks in a small seven-by-seven maze. Obstacles patrol fixed routes. Contact returns the player to the entrance. Collect all marks and reach the exit for success, or end at the time limit."
+    },
+    "climb": {
+      "name": "Climbing action",
+      "actions": "Move sideways and climb ladders",
+      "rules": "Climb a four-level model using ladders and sideways movement. Rolling objects return the player to the edge of the same level. Collect three marks and reach the top for success, or finish when time runs out."
+    },
+    "micro": {
+      "name": "Mini-game sequence",
+      "actions": "Choose the displayed button",
+      "rules": "Play sorting, timing and memory games twice each. Show a short demonstration before each game. Award 10 points per success. End after six challenges or at the overall time limit."
+    },
+    "bounce": {
+      "name": "Bounce and discover",
+      "actions": "Move a paddle and select tiles",
+      "rules": "Use a ball to reveal six tiles, then use their numbers to find two hidden stars. Give hints after wrong choices. Find both stars for success, or finish when time runs out."
+    },
+    "rhythm": {
+      "name": "Rhythm",
+      "actions": "Tap to the beat",
+      "rules": "Respond to 16 cues. Inputs inside the timing window give 10 points. Show early or late feedback. Twelve correct responses mean success. End at the last beat or the time limit."
+    },
+    "explore": {
+      "name": "Exploration",
+      "actions": "Move and investigate",
+      "rules": "Explore three small areas and find six clues. Display collected marks. Return to the start with all clues for success, or finish when time runs out."
+    },
+    "coop": {
+      "name": "Cooperative puzzle",
+      "actions": "Check clues and place pieces",
+      "rules": "Discuss two samples and place matching pieces four times. Show both samples together in solo mode. Each correct placement gives 10 points. End after four successes or when time runs out."
+    }
+  }
 };

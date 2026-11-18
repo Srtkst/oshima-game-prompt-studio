@@ -1,7 +1,7 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { mkdir, readFile, readdir, rename, unlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { gameBytesLimit, gameIdPattern, validateGame } from '../public/js/game-file.js';
+import { gameBytesLimit, gameIdPattern, validateGame, validateGameMetadata } from '../public/js/game-file.js';
 
 const bodyLimit = 2 * gameBytesLimit + 2048;
 const hash = (value) => createHash('sha256').update(value).digest();
@@ -92,7 +92,10 @@ export function gameApi({ key = '', publicUrl = '', directory, now = Date.now, t
         const title = typeof value?.title === 'string' ? value.title.trim() : '';
         if (!title || title.length > 80 || /[\p{Cc}\p{Cf}]/u.test(title)) throw new Error('表示名を1〜80文字で入力してください。');
         validateGame(value.html);
+        validateGameMetadata(value);
         game = { title, html: value.html };
+        if (value.titles) game.titles = { ja: value.titles.ja.trim(), en: value.titles.en.trim() };
+        if (value.descriptions) game.descriptions = { ja: value.descriptions.ja.trim(), en: value.descriptions.en.trim() };
       } catch (error) {
         request.resume();
         return json(response, 400, { error: error instanceof SyntaxError ? '作品データを読み取れませんでした。' : error.message });

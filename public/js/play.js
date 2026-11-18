@@ -1,5 +1,6 @@
 import qrCode from '../vendor/qrcode-generator.js';
-import { gameBytesLimit, gameDocument, gameIdPattern, isGameSlug, registeredGameUrl, registeredTitle, suggestGameSlug } from './game-file.js';
+import { gameBytesLimit, gameDocument, gameIdPattern, isGameSlug, registeredGameUrl, registeredTitle, suggestGameSlug, suggestTitles } from './game-file.js';
+import { getLanguage, initLanguage, message, t } from './i18n.js';
 
 const get = (id) => document.getElementById(id);
 const drop = get('game-import');
@@ -15,9 +16,28 @@ let source;
 let eventConfig;
 let sharedId;
 let importVersion = 0;
+let loadedGame;
+
+initLanguage();
+for (const id of ['game-title', 'game-label', 'registered-preview']) get(id).dataset.userContent = '';
+function syncGameLanguage() {
+  if (!source) return;
+  const title = loadedGame ? registeredTitle('', loadedGame, getLanguage()) : source.title;
+  get('game-label').textContent = title;
+  if (loadedGame) get('game-title').textContent = title;
+  document.title = `${loadedGame ? title : t('HTMLで遊ぶ')} | OSHIMA GAME PROMPT STUDIO`;
+  frame.contentWindow?.postMessage({ type: 'oshima-language', language: getLanguage() }, '*');
+}
+frame.addEventListener('load', syncGameLanguage);
+document.addEventListener('languagechange', () => {
+  syncGameLanguage();
+  if (!loadedGame) get('game-title').textContent = t('HTMLで遊ぶ');
+  updateFullscreenLabel();
+  updateRegistrationPreview();
+});
 
 function openGame(title, html) {
-  const document = gameDocument(html);
+  const document = gameDocument(html, getLanguage());
   source = { title, html, document };
   frame.srcdoc = document;
   get('game-label').textContent = title;
@@ -37,20 +57,23 @@ async function loadFile(file) {
     const html = new TextDecoder('utf-8', { fatal: true }).decode(await file.arrayBuffer());
     if (version !== importVersion) return;
     openGame(file.name, html);
-    const title = file.name.replace(/\.html?$/iu, '').slice(0, 80);
-    get('game-name').value = title;
-    get('registered-title').value = title;
+    const titles = suggestTitles(html, file.name);
+    get('game-name').value = titles.ja;
+    get('game-name-en').value = titles.en;
+    get('registered-title').value = titles.ja;
+    get('registered-title-en').value = titles.en;
     get('registered-description').value = '';
+    get('registered-description-en').value = '';
     const suggestedId = suggestGameSlug(file.name);
     get('registered-id').value = isGameSlug(suggestedId) && suggestedId !== 'sorting-demo' ? suggestedId : '';
     updateRegistrationPreview();
-    status.textContent = '読み込みました。下の画面で試遊できます。';
-    publishStatus.textContent = '';
+    message(status, '読み込みました。下の画面で試遊できます。');
+    message(publishStatus, '');
     staff.hidden = !eventConfig?.publishing;
     registration.hidden = false;
-    get('game-static-status').textContent = '';
+    message(get('game-static-status'), '');
   } catch (error) {
-    if (version === importVersion) status.textContent = `読み込めませんでした。${error.message}`;
+    if (version === importVersion) message(status, `読み込めませんでした。${error.message}`);
   }
 }
 
@@ -96,14 +119,14 @@ drop.addEventListener('drop', (event) => {
   drop.classList.remove('dragging');
   loadFile(event.dataTransfer.files.length === 1 ? event.dataTransfer.files[0] : undefined);
 });
-get('game-restart').addEventListener('click', () => { if (source) frame.srcdoc = source.document; });
+get('game-restart').addEventListener('click', () => { if (source) frame.srcdoc = gameDocument(source.html, getLanguage()); });
 
 function isExpanded() {
   return document.fullscreenElement === view || view.classList.contains('is-expanded');
 }
 
 function updateFullscreenLabel() {
-  fullscreen.textContent = isExpanded() ? '⛶ 大画面を閉じる' : '⛶ 大画面';
+  fullscreen.textContent = t(isExpanded() ? '⛶ 大画面を閉じる' : '⛶ 大画面');
   fullscreen.setAttribute('aria-pressed', String(isExpanded()));
 }
 
@@ -144,9 +167,11 @@ get('game-export-form').addEventListener('submit', async (event) => {
   const submit = get('game-export');
   const id = get('registered-id').value.trim();
   const title = get('registered-title').value.trim();
+  const titleEn = get('registered-title-en').value.trim();
   const description = get('registered-description').value.trim();
-  if (!title || !isGameSlug(id) || id === 'sorting-demo') {
-    status.textContent = '作品名と、48文字以内の作品IDを入力してください。既定のファイル名や端末の予約名は使えません。';
+  const descriptionEn = get('registered-description-en').value.trim();
+  if (!title || !titleEn || !isGameSlug(id) || id === 'sorting-demo') {
+    message(status, '作品名と、48文字以内の作品IDを入力してください。既定のファイル名や端末の予約名は使えません。');
     return;
   }
   submit.disabled = true;
@@ -154,14 +179,15 @@ get('game-export-form').addEventListener('submit', async (event) => {
   try {
     const response = await fetch(`./games/${encodeURIComponent(id)}.json`, { method: 'HEAD', cache: 'no-store' });
     if (response.ok) {
-      status.textContent = `「${id}」は登録済みです。別の作品IDを入力してください。`;
+      message(status, `「${id}」は登録済みです。別の作品IDを入力してください。`);
       return;
     }
     checked = response.status === 404;
   } catch { /* The HTML can still be packaged when the registry is offline. */ }
   finally { submit.disabled = false; }
   if (source !== selected) return;
-  const file = URL.createObjectURL(new Blob([JSON.stringify({ title, description, html: selected.html })], { type: 'application/json' }));
+  const file = URL.createObjectURL(new Blob([JSON.stringify({ title, description, titles: { ja: title, en: titleEn },
+    descriptions: { ja: description, en: descriptionEn }, html: selected.html })], { type: 'application/json' }));
   const link = document.createElement('a');
   link.href = file;
   link.download = `${id}.json`;
@@ -169,15 +195,15 @@ get('game-export-form').addEventListener('submit', async (event) => {
   link.click();
   link.remove();
   setTimeout(() => URL.revokeObjectURL(file), 1000);
-  status.textContent = `${id}.json を保存します。公開後の作品URLは play.html?game=${id} です。${checked ? '' : '登録済みIDとの重複は、配置前に確認してください。'}`;
+  message(status, `${id}.json を保存します。公開後の作品URLは play.html?game=${id} です。${checked ? '' : '登録済みIDとの重複は、配置前に確認してください。'}`);
 });
 
 get('game-qr-form').addEventListener('submit', (event) => {
   event.preventDefault();
   try {
     showQr(get('game-url').value);
-    get('game-qr-status').textContent = 'QRを作成しました。別の端末でURLが開くことを確認してください。';
-  } catch (error) { get('game-qr-status').textContent = error.message; }
+    message(get('game-qr-status'), 'QRを作成しました。別の端末でURLが開くことを確認してください。');
+  } catch (error) { message(get('game-qr-status'), error.message); }
 });
 
 get('game-publish').addEventListener('submit', async (event) => {
@@ -186,34 +212,35 @@ get('game-publish').addEventListener('submit', async (event) => {
   const submit = event.currentTarget.querySelector('button[type=submit]');
   const key = get('game-key').value;
   if (!/^[\x21-\x7e]{16,150}$/u.test(key)) {
-    publishStatus.textContent = '16文字以上の半角英数字・記号の公開キーを入力してください。';
+    message(publishStatus, '16文字以上の半角英数字・記号の公開キーを入力してください。');
     return;
   }
   submit.disabled = true;
-  publishStatus.textContent = '公開しています…';
+  message(publishStatus, '公開しています…');
   try {
     const { id, expiresAt } = await request('./api/games', {
       method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-      body: JSON.stringify({ title: get('game-name').value, html: source.html }),
+      body: JSON.stringify({ title: get('game-name').value, titles: { ja: get('game-name').value, en: get('game-name-en').value }, html: source.html }),
     });
     const url = new URL('./play.html', eventConfig.publicUrl || location.href);
     url.searchParams.set('id', id);
+    url.searchParams.set('lang', getLanguage());
     showQr(url.href, id);
     const loopback = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
-    publishStatus.textContent = `公開期限 ${new Date(expiresAt).toLocaleString('ja-JP')}。${loopback ? '別の端末には配信先URLの設定が必要です。' : ''}`;
-  } catch (error) { publishStatus.textContent = error.message; }
+    message(publishStatus, `公開期限 ${new Date(expiresAt).toLocaleString(getLanguage() === 'en' ? 'en-US' : 'ja-JP')}。${loopback ? '別の端末には配信先URLの設定が必要です。' : ''}`);
+  } catch (error) { message(publishStatus, error.message); }
   finally { submit.disabled = false; }
 });
 
 remove.addEventListener('click', async () => {
-  if (!sharedId || !confirm('この作品の公開を終了しますか？')) return;
+  if (!sharedId || !confirm(t('この作品の公開を終了しますか？'))) return;
   remove.disabled = true;
   try {
     await request(`./api/games/${sharedId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${get('game-key').value}` } });
     get('game-share').hidden = true;
     sharedId = undefined;
-    publishStatus.textContent = '公開を終了しました。';
-  } catch (error) { publishStatus.textContent = error.message; }
+    message(publishStatus, '公開を終了しました。');
+  } catch (error) { message(publishStatus, error.message); }
   finally { remove.disabled = false; }
 });
 
@@ -223,19 +250,20 @@ const staticGame = params.get('game');
 if (id !== null || staticGame !== null) {
   drop.hidden = true;
   get('game-existing').hidden = true;
-  status.textContent = 'ゲームを読み込んでいます…';
+  message(status, 'ゲームを読み込んでいます…');
   try {
     if (id !== null ? staticGame !== null || !gameIdPattern.test(id) : !isGameSlug(staticGame)) {
       throw new Error('作品URLを確認してください。');
     }
     const game = await request(id !== null ? `./api/games/${id}` : `./games/${encodeURIComponent(staticGame)}.json`);
     if (typeof game?.title !== 'string' || !game.title.trim() || game.title.length > 80 || typeof game.html !== 'string') throw new Error('作品データを確認してください。');
-    const title = staticGame === null ? game.title : registeredTitle(staticGame, game);
+    const title = registeredTitle(staticGame ?? '', game, getLanguage());
+    loadedGame = game;
     openGame(title, game.html);
     get('game-title').textContent = title;
-    status.textContent = 'ゲーム画面をタップして遊べます。';
+    message(status, 'ゲーム画面をタップして遊べます。');
     if (staticGame !== null && !['localhost', '127.0.0.1', '[::1]'].includes(location.hostname)) showQr(registeredGameUrl(staticGame, location.href));
-  } catch (error) { status.textContent = error.message; }
+  } catch (error) { message(status, error.message); }
 } else {
   request('./api/event.json').then((config) => {
     eventConfig = config;

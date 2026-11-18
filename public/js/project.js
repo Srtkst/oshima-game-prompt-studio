@@ -1,4 +1,4 @@
-import { presets } from './presets.generated.js';
+import { presets, presetsEnglish } from './presets.generated.js';
 
 export const topics = presets.topics;
 export const genres = presets.genres;
@@ -43,8 +43,8 @@ export function applyTopic(project, topicId) {
   if (topic) project.genreId = topic.genreId;
 }
 
-export function topicStory(project) {
-  return project.story.trim() || topics.find(({ id }) => id === project.topicId)?.story || '';
+export function topicStory(project, language = 'ja') {
+  return project.story.trim() || (language === 'en' ? presetsEnglish.topics[project.topicId]?.story : topics.find(({ id }) => id === project.topicId)?.story) || '';
 }
 
 export function recommend(project) {

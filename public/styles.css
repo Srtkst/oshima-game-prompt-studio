@@ -40,6 +40,14 @@ h1, h2 { line-height: 1.3; }
 .header-link { text-decoration: none; background: var(--card); border: 2px solid var(--ink); border-radius: 8px; padding: 6px 10px; box-shadow: 2px 2px 0 var(--ink); font-size: .81rem; font-weight: 800; }
 .header-link:hover { background: var(--yellow); }
 .header-link span { padding-left: .25rem; }
+.header-row { flex-wrap: wrap; padding-block: 8px; }
+.header-row > .brand { margin-right: auto; }
+.language-control { display: inline-flex; align-items: center; }
+.language-select { min-height: 38px; max-width: 115px; padding: 5px 7px; border: 2px solid var(--ink); border-radius: 7px; color: var(--ink); background: var(--card); font-weight: 700; font-size: .8rem; }
+.file-button { display: inline-block; justify-self: start; cursor: pointer; }
+.drop-area:has(input[type=file]:focus-visible) .file-button { outline: 3px solid var(--focus); outline-offset: 4px; }
+html[lang=en] .hero h1 { font-size: clamp(2rem, 4vw, 3.1rem); letter-spacing: -.03em; }
+html[lang=en] .review-row { grid-template-columns: 7em minmax(0, 1fr) auto; }
 
 .hero { display: grid; grid-template-columns: 1fr .94fr; align-items: center; gap: clamp(25px, 4vw, 56px); margin: 35px 0 33px; padding: clamp(24px, 3vw, 40px); background: var(--card); border: 3px solid var(--ink); border-radius: 17px; box-shadow: 7px 7px 0 var(--ink); }
 .eyebrow { color: var(--ink); font: 800 .71rem/1.5 ui-monospace, Consolas, monospace; letter-spacing: .09em; }
@@ -205,6 +213,7 @@ h1, h2 { line-height: 1.3; }
 @media (max-width: 410px) {
   .header-link { font-size: .71rem; padding-inline: 6px; }
   .review-row { grid-template-columns: minmax(0, 1fr) auto; }
+  html[lang=en] .review-row { grid-template-columns: minmax(0, 1fr) auto; }
   .review-row dd { grid-row: 2; grid-column: 1 / -1; }
 }
 

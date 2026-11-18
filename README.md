@@ -19,6 +19,8 @@ npm run dev
 
 設定と編集内容は同じブラウザーに自動保存されます。別の環境に移す場合は設定JSONを保存してください。共有URLには設定だけが入ります。個人情報や未公開情報を共有する前に入力を見直してください。
 
+各ページ右上の言語選択で、日本語と英語を切り替えられます。言語選択は同じブラウザーと共有URLに引き継がれます。質問・案内・検査結果と生成原文は選択言語で表示し、手動編集版は日本語と英語を別々に保存します。自由入力の文章は入力された内容を保持します。
+
 ## HTMLで遊ぶ・イベントでQRを配る
 
 ホームの「HTMLで遊ぶ」から、UTF-8で自己完結した単一HTML（512 KB以内）を試遊できます。PCはドラッグ＆ドロップ、スマートフォンはファイル選択に対応します。公開済みのゲームは、URLを入力してQRを作れます。QR生成には同梱の [qrcode-generator 2.0.4](https://github.com/kazuhikoarase/qrcode-generator)（MIT）を使います。
@@ -27,7 +29,7 @@ npm run dev
 
 ## データとテスト
 
-- `data/presets.json` が共通プリセットの正本です。変更後に `npm run build` で配布用モジュールを更新します。
+- `data/presets.json` と `data/presets.en.json` が日英プリセットの正本です。変更後に `npm run build` で配布用モジュールを更新します。
 - `npm test` は配布データと正本の一致、および生成・入力検証のテストを実行します。
 - `public/` が静的配信ディレクトリです。GitHub Pagesの公開元に GitHub Actions を選ぶと、`main` の更新時にテストを実行してから `public/` を公開します。
 - `examples/sorting/prompt.md` はアプリから実際にダウンロードした指示書です。`examples/sorting/index.html` をブラウザで直接開くと、仕分けゲームをオフラインで試せます。

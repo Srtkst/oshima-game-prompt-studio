@@ -1,7 +1,7 @@
 import { readFile, readdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { isGameSlug, registeredTitle, validateGame } from '../public/js/game-file.js';
+import { isGameSlug, registeredTitle, validateGame, validateGameMetadata } from '../public/js/game-file.js';
 
 const directory = new URL('../public/games/', import.meta.url);
 
@@ -15,10 +15,12 @@ export async function gameCatalog(root = directory) {
       if (!isGameSlug(id)) throw new Error('ファイル名は小文字の英数字・日本語・ハイフンで指定してください。');
       const text = await readFile(new URL(encodeURIComponent(entry.name), root), 'utf8');
       const game = JSON.parse(text.replace(/^\uFEFF/u, ''));
-      if (typeof game?.title !== 'string' || !game.title.trim() || game.title.length > 80) throw new Error('作品名は1〜80文字で指定してください。');
-      if (game.description !== undefined && (typeof game.description !== 'string' || game.description.length > 140)) throw new Error('紹介文は140文字以内です。');
+      validateGameMetadata(game);
       validateGame(game.html);
-      games.push({ id, title: registeredTitle(id, game).trim(), description: game.description?.trim() ?? '' });
+      const item = { id, title: registeredTitle(id, game).trim(), description: game.description?.trim() ?? '' };
+      if (game.titles) item.titles = game.titles;
+      if (game.descriptions) item.descriptions = game.descriptions;
+      games.push(item);
     } catch (error) { throw new Error(`${entry.name} の登録を確認してください。${error.message}`, { cause: error }); }
   }
   games.sort((a, b) => a.title.localeCompare(b.title, 'ja') || a.id.localeCompare(b.id));

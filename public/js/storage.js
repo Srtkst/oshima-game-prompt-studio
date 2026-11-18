@@ -13,7 +13,7 @@ const stringLimits = { projectTitle: limits.title, story: limits.story, sourceTi
 const asObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 const validText = (value, limit) => typeof value === 'string' && value.length <= limit
   && !/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u202a-\u202e\u2066-\u2069]/u.test(value);
-const draftKey = /^([a-z_]+):([a-z]+)$/u;
+const draftKey = /^([a-z_]+):([a-z]+)(?::(en|ja))?$/u;
 
 function invalid(field) {
   throw new Error(`設定JSONの「${field}」を確認してください。`);
@@ -28,7 +28,7 @@ export function packProject({ project, projectId, drafts = {}, step = 0, screen 
   const { schemaVersion, projectTitle, ...answers } = project;
   const recommendationsOverridden = ['playSeconds', 'difficulty', 'techStack']
     .filter((key) => answers[key] && answers[key] !== 'auto');
-  return { schemaVersion, appVersion: '0.2.0', projectId, projectTitle, answers, recommendationsOverridden,
+  return { schemaVersion, appVersion: '0.3.0', projectId, projectTitle, answers, recommendationsOverridden,
     drafts: withDrafts ? drafts : {}, updatedAt: new Date().toISOString(), step: withDrafts ? step : 0,
     screen: withDrafts ? screen : 'wizard', genreChanged, kind, target };
 }

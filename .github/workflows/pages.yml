@@ -54,3 +54,6 @@ jobs:
           curl -fsSL --max-time 15 --retry 5 --retry-all-errors --retry-delay 5 "$base/games/sorting-demo.json" -o /dev/null
           curl -fsSL --max-time 15 --retry 5 --retry-all-errors --retry-delay 5 "$base/gallery.html" -o /dev/null
           curl -fsSL --max-time 15 --retry 5 --retry-all-errors --retry-delay 5 "$base/games/index.json" -o /dev/null
+          curl -fsSL --max-time 15 --retry 5 --retry-all-errors --retry-delay 5 "$base/js/i18n.js" -o /dev/null
+          curl -fsSL --max-time 15 --retry 5 --retry-all-errors --retry-delay 5 "$base/js/translations-en.js" -o /dev/null
+          curl -fsSL --max-time 15 --retry 5 --retry-all-errors --retry-delay 5 "$base/js/generate-en.js" -o /dev/null

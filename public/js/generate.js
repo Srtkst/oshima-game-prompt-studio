@@ -1,4 +1,6 @@
 import { choices, genres, recommend, topicStory, validate } from './project.js';
+import { englishAdapters, englishTasks, generateEnglish } from './generate-en.js';
+import { t } from './i18n.js';
 
 export const sections = [
   'この指示書の目的と成果物', '対象プレイヤーとねらい', '題材・元エピソード・出典区分',
@@ -24,16 +26,17 @@ const adapters = {
   gemini: 'ファイル一覧を先に提示し、ファイルごとの内容と再現可能な実機確認の条件を示す。',
 };
 
-export function generateOutput(project, kind = 'integrated', target = 'generic', projectId = '') {
-  const original = generate(project);
+export function generateOutput(project, kind = 'integrated', target = 'generic', projectId = '', language = 'ja') {
+  const original = language === 'en' ? generateEnglish(project) : generate(project);
   const output = outputs[kind];
   let text = original;
   if (kind !== 'integrated') {
     const [heading, ...blocks] = original.trimEnd().split(/\n\n(?=## \d+\. )/u);
-    text = [`${heading} / ${output.label}`, `用途：${output.label}${projectId ? `\n\n企画ID：${projectId}` : ''}`,
-      ...output.sections.map((number) => blocks[number - 1]), `## ${output.label}の成果物\n\n${output.task}`].join('\n\n') + '\n';
+    const label = t(output.label, language);
+    text = [`${heading} / ${label}`, language === 'en' ? `Task: ${label}${projectId ? `\n\nProject ID: ${projectId}` : ''}` : `用途：${label}${projectId ? `\n\n企画ID：${projectId}` : ''}`,
+      ...output.sections.map((number) => blocks[number - 1]), language === 'en' ? `## ${label} deliverables\n\n${englishTasks[kind]}` : `## ${label}の成果物\n\n${output.task}`].join('\n\n') + '\n';
   }
-  return target === 'generic' ? text : `${text}\n## ${targets[target]}向けの提示方法\n\n${adapters[target]}\n`;
+  return target === 'generic' ? text : language === 'en' ? `${text}\n## Presentation for ${targets[target]}\n\n${englishAdapters[target]}\n` : `${text}\n## ${targets[target]}向けの提示方法\n\n${adapters[target]}\n`;
 }
 
 const inline = (value) => value.trim().replace(/\r\n|[\r\n]/gu, ' ')
@@ -101,7 +104,7 @@ export function generate(project) {
     '生活や防災の題材は道具や操作、協力に自然に組み込む。国籍・宗教・世代で性格や責任を決めつけない。失敗を過度な恐怖や恥で表現しない。氏名・連絡先・部屋番号を収集しない。避難経路やごみ出し等の未検証の地域ルールを補わない。',
     'タイトル・言語選択 → 遊び方 → プレイ → リザルト。リザルトはスコア・達成状況・リトライ・タイトルへ戻る操作で構成する。学習メッセージや会話の促しはリザルトに置かない。リトライで初期状態へ戻す。',
     `- 画風：${project.visual === 'custom' ? inline(project.styleNotes) : choices.visual[project.visual]}\n- 画面：見出しと主要ボタンを分け、濃色 #18251F、明色 #F8F7EE、アクセント #DDEB98 を基調に十分なコントラストを確保する。\n- 操作役：場面に合う動きやすい服装。待機・入力・成功・失敗は姿勢や表情でも区別する。\n- サウンド：${audio}`,
-    `対応言語は ${project.languages.map((id) => `${choices.languages[id]} (${id})`).join('、')}。タイトルで切り替え可能にし、操作説明、ボタン、残り時間、リザルトを辞書から表示する。初期値は日本語。追加翻訳の自然さは人が確認する。`,
+    `対応言語は ${project.languages.map((id) => `${choices.languages[id]} (${id})`).join('、')}。タイトルで切り替え可能にし、操作説明、ボタン、残り時間、リザルトを辞書から表示する。初期値は日本語。追加翻訳の自然さは人が確認する。ゲームのheadに name="game:title:ja" と name="game:title:en" のmeta要素を置き、contentに日英それぞれの作品名を設定する。select#language の値 ja/en、明示的なボタン #lang-ja と #lang-en、または oshima-language カスタムイベントで言語を変更できるようにする。`,
     runtime,
     single ? '`index.html` のみ。CSS・JavaScript・SVGを必要に応じて同じHTMLに含める。' : '`index.html`、`styles.css`、`game.js`、`README.md` を分割する。参照は相対パスにする。' + (pwa ? ' `sw.js` と `manifest.webmanifest` を追加する。' : ' ローカルで開ける通常スクリプトを使用する。'),
     assets,

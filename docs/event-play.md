@@ -7,9 +7,13 @@ GitHub Pages版では「HTMLで遊ぶ」から同じ端末で試遊し、公開�
 ### GitHub Pagesへ事前登録
 
 1. 確認済みのHTMLを「HTMLで遊ぶ」で開き、「運営者がGitHub Pagesに事前登録する」を開く。
-2. 作品名と作品IDを確認して登録用JSONを保存する。たとえば `Tool Tidying.html` からは `tool-tidying.json` が提案される。作品IDは日本語・小文字の英数字・ハイフンで変更できる。
+2. 日英の作品名・紹介文と作品IDを確認して登録用JSONを保存する。作品名はHTMLの `game:title:ja` / `game:title:en` メタ情報、または日英併記の `<title>` から提案される。抽出できない言語の欄は入力してから保存する。たとえば `Tool Tidying.html` からは `tool-tidying.json` が提案される。作品IDは日本語・小文字の英数字・ハイフンで変更できる。
 3. JSONを `public/games/` に追加してpushする。GitHub Actionsが作品一覧を自動生成する。公開後は `play.html?game=tool-tidying` のようにJSONの拡張子を除いた名前で開ける。
 4. 既存のJSONをリネームすると、作品一覧には新しい名前が反映される。以前配ったURLとQRは、新しいファイル名に合わせて作り直す。
+
+登録JSONには `titles: { "ja": "日本語タイトル", "en": "English title" }` と `descriptions: { "ja": "紹介文", "en": "Description" }` を持たせる。従来の `title` と `description` も残して以前の形式を読み込めるようにしている。作品一覧とプレイ画面のタイトルはサイトで選択した言語を使う。
+
+ゲーム内の切り替えは `select#language` の `ja` / `en`、`#lang-ja` / `#lang-en`（`#btn-lang-ja` / `#btn-lang-en`も可）、または `oshima-language` カスタムイベントを利用できる。ゲームのフレームを再読み込みせずに通知するため、切り替え処理でゲームを初期化しないようにする。新しく持ち込むHTMLには、そのゲーム自身の日英の表示辞書が必要。
 
 会場で新しいHTMLを受け付け、GitHubの再配信を待たずに参加者へQRを渡す場合は、同じアプリをNode.jsのイベント配信モードで起動する。
 
